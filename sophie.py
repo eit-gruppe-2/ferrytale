@@ -39,7 +39,7 @@ pygame.display.set_caption("Ferrytale")
 boat_list = pygame.sprite.Group()
 dock = pygame.sprite.Group()
 all_sprites_list = pygame.sprite.Group()
-
+all_sprites_list.add(environment.goal)
 boat = Ferry(GREEN, 20, 20)
 boat.rect.x = xb
 boat.rect.y = yb
@@ -53,6 +53,7 @@ myboat.rect.y = y_coord
 all_sprites_list.add(myboat)
 all_sprites_list.add(environment.agent)
 boat_list.add(environment.boats)
+all_sprites_list.add(environment.boats)
 
 NO_ACTION = env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.NONE)
 
