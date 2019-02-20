@@ -1,9 +1,7 @@
 import numpy as np
+import sympy as sy
 import math
-import pygame
-from enum import Enum
 from collections import namedtuple
-from itertools import product
 
 Point = namedtuple("Point", ["x", "y"])
 
@@ -19,74 +17,33 @@ class Position:
         self.velocity = velocity
 
     def step(self, time):
-        return Point(self.point.x + time * self.velocity.x, self.point.y + time * self.velocity.y)
+        self.point = Point(self.point.x + time * self.velocity.x, self.point.y + time * self.velocity.y)
 
     def distance(self, to):
         return math.sqrt((self.point.x - to.x)**2 + (self.point.y - to.y)**2)
-    
 
 
-class Boat(pygame.sprite.Sprite):
-    velocity = Point(0, 0)
+class Boat:
+    position = None
 
     def __init__(self, initialPosition):
-        super().__init__()
-        self.image = pygame.Surface([10, 10])
-        self.rect = self.image.get_rect()
-        self.rect.x = initialPosition.point.x
-        self.rect.y = initialPosition.point.y
-        self.velocity = initialPosition.velocity
+        self.position = initialPosition
 
-    def do_action(self, action):
-        x = self.velocity.x + action.horizontal_acc.value
-        y = self.velocity.y + action.vertical_acc.value
-        self.velocity = Point(x, y)
+    def do_action(self, velocity):
+        self.position.velocity = velocity
 
     def step(self, speed):
         self.position.step(speed)
 
-    def step(self, time):
-        self.rect.x = self.rect.x + time * self.velocity.x * 0.5
-        self.rect.y = self.rect.y + time * self.velocity.y * 0.5
-
     def is_within_distance(self, distance, other_point):
-        return False
-        #return self.position.distance(other_point) < distance
+        return self.position.distance(other_point) < distance
 
+    def distanceToOther(self,other_point):
+        return self.position.distance(other_point)
 
-class VerticalAccelerationChoice(Enum):
-    BACK = -1
-    NONE = 0
-    FORWARD = 1
-
-class HorizontalAccelerationChoice(Enum):
-    LEFT = -1
-    NONE = 0
-    RIGHT = 1
-
-class Action:
-    horizontal_acc = HorizontalAccelerationChoice.NONE
-    vertical_acc = VerticalAccelerationChoice.NONE
-
-    def __init__(self, vertical_acc, horizontal_acc):
-        self.vertical_acc = vertical_acc
-        self.horizontal_acc = horizontal_acc
-
-
-possibleActions = [Action(vertical_acc, horizontal_acc) for vertical_acc, horizontal_acc in product(VerticalAccelerationChoice, HorizontalAccelerationChoice)]
-
-"""possibleActions = [
-    Action(AccelerationChoice.BACK, DirectionChoice.LEFT),
-    Action(AccelerationChoice.BACK, DirectionChoice.NONE),
-    Action(AccelerationChoice.BACK, DirectionChoice.RIGHT),
-    Action(AccelerationChoice.NONE, DirectionChoice.LEFT),
-    Action(AccelerationChoice.NONE, DirectionChoice.NONE),
-    Action(AccelerationChoice.NONE, DirectionChoice.RIGHT),
-    Action(AccelerationChoice.FORWARD, DirectionChoice.LEFT),
-    Action(AccelerationChoice.FORWARD, DirectionChoice.NONE),
-    Action(AccelerationChoice.FORWARD, DirectionChoice.RIGHT),
-]"""
-
+    def penaltyCollision(self, formula, **kwargs):
+        expr = sy.sympify(formula)
+        return expr.evalf(subs=kwargs)
 
 class Environment:
 
@@ -103,7 +60,7 @@ class Environment:
         self.speed = speed
         self.dimensions = dimensions
 
-        
+
     def step(self, action):
 
         self.agent.do_action(action)
@@ -121,7 +78,13 @@ class Environment:
 
         if self.agent.is_within_distance(20, self.goalPoint):
             return True
-        
+
+        for boat in self.boats:
+            p = boat.position.point
+            if p.x > self.dimensions[0] or p.x < 0:
+                return False
+            if p.y > self.dimensions[1] or p.y < 0:
+                return True
         return False
 
 def position_bottom_center(dimensions):
@@ -137,7 +100,7 @@ def point_right_center(dimensions):
 def generate_scenario(speed, dimensions):
 
     # Generates same environment as seen in meeting with milliampere
-    agent = Boat(Position(Point(dimensions[0] / 2, dimensions[1] / 2), Point(0, 0)))
+    agent = Boat(Position(position_bottom_center(dimensions), Point(0, 0)))
 
     collidable_boat = Boat(Position(point_right_center(dimensions), Point(-4, 0)))
     boats = [collidable_boat]
@@ -146,13 +109,22 @@ def generate_scenario(speed, dimensions):
 
     return Environment(boats, goalPoint, agent, speed, dimensions)
 
-if __name__ == "__main__": 
+def myformula(formula, **kwargs):
+    expr = sy.sympify(formula)
+    return expr.evalf(subs=kwargs)
+
+if __name__ == "__main__":
 
     env = generate_scenario(0.16, [500, 700])
 
-    print("Before", env.agent.rect)
-    env.step(possibleActions[0])
-    print("After 1", env.agent.rect)
+    env = generate_scenario(0.16, [500, 700])
 
-    env.step(possibleActions[1])
-    print("After 2", env.agent.rect)
+    dist = env.agent.distanceToOther(env.boats[0].position.point)
+    print("cost value:",env.agent.penaltyCollision(formula="2*x+1", x = dist))
+
+    print("Before", env.agent.position.point)
+    env.step(Point(10, 10))
+    print("After 1", env.agent.position.point)
+
+    env.step(Point(7, 7))
+    print("After 2", env.agent.position.point)
