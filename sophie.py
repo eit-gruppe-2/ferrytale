@@ -24,10 +24,13 @@ class ferry(pygame.sprite.Sprite):
 
 pygame.init()
 
-environment = env.generate_scenario(1,[700,500])
-
 display_width = 700
 display_height = 500
+
+env_speed = 1
+env_dim = [display_width, display_height]
+environment = env.generate_scenario(env_speed, env_dim)
+
 
 size = [display_width, display_height]
 screen = pygame.display.set_mode(size)
@@ -78,6 +81,7 @@ while not done:
     # --- Event Processing
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            print("DONE = True")
             done = True
             # User pressed down on a key
 
@@ -119,11 +123,11 @@ while not done:
     if yb == 0:
         speed = -speed
 
-    if x_coord == xb:
+    """if x_coord == xb:
         done = True
     elif y_coord == yb:
         done = True
-
+    """
     # y_prev= 0
     #
     # while y_prev <= yb:
@@ -158,9 +162,13 @@ while not done:
 
     draw_boat(screen, xb, yb)
     draw_boat(screen,environment.agent.position.point.x,environment.agent.position.point.y)
+    for b in environment.boats:
+        draw_boat(screen, b.position.point.x, b.position.point.y)
+    
+    nextState, reward, env_done = environment.step(env.Point(x_speed,y_speed))
 
-    environment.step(env.Point(x_speed,y_speed))
-
+    if env_done:
+        environment = env.generate_scenario(env_speed, env_dim)
     # Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
 

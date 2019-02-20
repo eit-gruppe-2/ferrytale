@@ -19,7 +19,7 @@ class Position:
         self.point = Point(self.point.x + time * self.velocity.x, self.point.y + time * self.velocity.y)
 
     def distance(self, to):
-        return math.sqrt((self.point.x - to.point.x)**2 + (self.point.y - to.point.y)**2)
+        return math.sqrt((self.point.x - to.x)**2 + (self.point.y - to.y)**2)
     
 
 
@@ -35,6 +35,8 @@ class Boat:
     def step(self, speed):
         self.position.step(speed)
 
+    def is_within_distance(self, distance, other_point):
+        return self.position.distance(other_point) < distance
 
 class Environment:
 
@@ -62,9 +64,21 @@ class Environment:
 
         nextState = None
         reward = 0
-        done = False
-        return nextState, reward, done
+        return nextState, reward, self.is_done()
 
+    def is_done(self):
+        # Done if agent has reached goal
+
+        if self.agent.is_within_distance(20, self.goalPoint):
+            return True
+        
+        for boat in self.boats:
+            p = boat.position.point
+            if p.x > self.dimensions[0] or p.x < 0:
+                return False
+            if p.y > self.dimensions[1] or p.y < 0:
+                return True
+        return False
 
 def position_bottom_center(dimensions):
     return Point(dimensions[0] / 2, dimensions[1])
@@ -72,14 +86,19 @@ def position_bottom_center(dimensions):
 def point_top_center(dimensions):
     return Point(dimensions[0] / 2, 0)
 
+def point_right_center(dimensions):
+    return Point(dimensions[0], dimensions[1] / 2)
 # Speed: Time between frames
 # Dimenstions: [width: number, height: number]
 def generate_scenario(speed, dimensions):
+
+    # Generates same environment as seen in meeting with milliampere
     agent = Boat(Position(position_bottom_center(dimensions), Point(0, 0)))
 
-    boats = []
+    collidable_boat = Boat(Position(point_right_center(dimensions), Point(-4, 0)))
+    boats = [collidable_boat]
 
-    goalPoint = Point(0, 0)
+    goalPoint = point_top_center(dimensions)
 
     return Environment(boats, goalPoint, agent, speed, dimensions)
 
