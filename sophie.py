@@ -24,7 +24,7 @@ class ferry(pygame.sprite.Sprite):
 
 pygame.init()
 
-environment = env.generate_scenario(0.16,[700,500])
+environment = env.generate_scenario(1,[700,500])
 
 display_width = 700
 display_height = 500
@@ -41,6 +41,7 @@ def draw_stick_figure(screen, x, y):
 
 def draw_boat(boat, x, y):
     pygame.draw.rect(boat, GREEN, [x, y, 20, 20], 0)
+
 
 # Set the width and height of the screen [width,height]
 
@@ -157,7 +158,8 @@ while not done:
 
     draw_boat(screen, xb, yb)
     draw_boat(screen,environment.agent.position.point.x,environment.agent.position.point.y)
-    environment.step(env.Point(0.1,0.1))
+
+    environment.step(env.Point(x_speed,y_speed))
 
     # Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
