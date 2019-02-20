@@ -1,5 +1,3 @@
-
-
 import pygame
 import os, sys
 import time
