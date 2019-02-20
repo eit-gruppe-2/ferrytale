@@ -27,8 +27,6 @@ env_speed = 1
 env_dim = [display_width, display_height]
 environment = env.generate_scenario(env_speed, env_dim)
 
-
-
 xb = 450
 yb = 0
 x_coord = 10
@@ -39,6 +37,7 @@ screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Ferrytale")
 
 boat_list = pygame.sprite.Group()
+dock = pygame.sprite.Group()
 all_sprites_list = pygame.sprite.Group()
 
 boat = Ferry(GREEN, 20, 20)
@@ -58,10 +57,10 @@ boat_list.add(environment.boats)
 NO_ACTION = env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.NONE)
 
 def ourboat(screen, x, y):
-    pygame.draw.rect(screen, BLACK, [1 + x, y, 20, 20], 0)
+     pygame.draw.rect(screen, BLACK, [1 + x, y, 20, 20], 0)
 
 def draw_boat(boat, x, y):
-    pygame.draw.rect(boat, GREEN, [x, y, 20, 20], 0)
+     pygame.draw.rect(boat, GREEN, [x, y, 20, 20], 0)
 
 done = False
 
@@ -148,7 +147,6 @@ while not done:
 
     if env_done:
         environment = env.generate_scenario(env_speed, env_dim)
-    # Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
 
     # Limit frames per second
