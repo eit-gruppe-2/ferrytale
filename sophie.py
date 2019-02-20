@@ -52,7 +52,10 @@ myboat = Ferry(BLACK,20,20)
 myboat.rect.x = x_coord
 myboat.rect.y = y_coord
 all_sprites_list.add(myboat)
+all_sprites_list.add(environment.agent)
+boat_list.add(environment.boats)
 
+NO_ACTION = env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.NONE)
 
 def ourboat(screen, x, y):
     pygame.draw.rect(screen, BLACK, [1 + x, y, 20, 20], 0)
@@ -88,12 +91,16 @@ while not done:
             # Figure out if it was an arrow key. If so
             # adjust speed.
             if event.key == pygame.K_LEFT:
+                environment.step(env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.LEFT))
                 x_speed = -3
             elif event.key == pygame.K_RIGHT:
+                environment.step(env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.RIGHT))
                 x_speed = 3
             elif event.key == pygame.K_UP:
+                environment.step(env.Action(env.VerticalAccelerationChoice.BACK, env.HorizontalAccelerationChoice.NONE))
                 y_speed = -3
             elif event.key == pygame.K_DOWN:
+                environment.step(env.Action(env.VerticalAccelerationChoice.FORWARD, env.HorizontalAccelerationChoice.NONE))
                 y_speed = 3
 
         # User let up on a key
@@ -103,6 +110,8 @@ while not done:
                 x_speed = 0
             elif event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                 y_speed = 0
+        
+
 
     x_coord = x_coord + x_speed
     y_coord = y_coord + y_speed
@@ -134,11 +143,8 @@ while not done:
     screen.fill(BLUE)
     all_sprites_list.draw(screen)
     draw_boat(screen, xb, yb)
-    draw_boat(screen,environment.agent.position.point.x,environment.agent.position.point.y)
-    for b in environment.boats:
-        draw_boat(screen, b.position.point.x, b.position.point.y)
-    
-    nextState, reward, env_done = environment.step(env.Point(x_speed,y_speed))
+
+    nextState, reward, env_done = environment.step(NO_ACTION)
 
     if env_done:
         environment = env.generate_scenario(env_speed, env_dim)
