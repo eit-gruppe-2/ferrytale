@@ -20,13 +20,15 @@ class Ferry(pygame.sprite.Sprite):
 
 pygame.init()
 
+<<<<<<< HEAD
 
 xb = 450
 yb = 0
 x_coord = 10
 y_coord = 10
 
-environment = env.generate_scenario(0.16,[700,500])
+
+environment = env.generate_scenario(1,[700,500])
 
 display_width = 700
 display_height = 500
@@ -56,12 +58,6 @@ def ourboat(screen, x, y):
 def draw_boat(boat, x, y):
     pygame.draw.rect(boat, GREEN, [x, y, 20, 20], 0)
 
-# Set the width and height of the screen [width,height]
-
-
-
-
-# Loop until the user clicks the close button.
 done = False
 
 # Used to manage how fast the screen updates
@@ -136,7 +132,8 @@ while not done:
     all_sprites_list.draw(screen)
     draw_boat(screen, xb, yb)
     draw_boat(screen,environment.agent.position.point.x,environment.agent.position.point.y)
-    environment.step(env.Point(0.1,0.1))
+
+    environment.step(env.Point(x_speed,y_speed))
 
     # Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
