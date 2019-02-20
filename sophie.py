@@ -2,7 +2,6 @@
 
 import pygame
 import os, sys
-import random
 import time
 import environment as env
 
@@ -22,6 +21,7 @@ class Ferry(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 pygame.init()
+
 
 xb = 450
 yb = 0
