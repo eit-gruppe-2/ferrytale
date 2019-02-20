@@ -20,7 +20,6 @@ class Ferry(pygame.sprite.Sprite):
 
 pygame.init()
 
-<<<<<<< HEAD
 
 xb = 450
 yb = 0
@@ -52,11 +51,11 @@ myboat.rect.y = y_coord
 all_sprites_list.add(myboat)
 
 
-def ourboat(screen, x, y):
-    pygame.draw.rect(screen, BLACK, [1 + x, y, 20, 20], 0)
-
-def draw_boat(boat, x, y):
-    pygame.draw.rect(boat, GREEN, [x, y, 20, 20], 0)
+# def ourboat(screen, x, y):
+#     pygame.draw.rect(screen, BLACK, [1 + x, y, 20, 20], 0)
+#
+# def draw_boat(boat, x, y):
+#     pygame.draw.rect(boat, GREEN, [x, y, 20, 20], 0)
 
 done = False
 
@@ -130,10 +129,10 @@ while not done:
 
     screen.fill(BLUE)
     all_sprites_list.draw(screen)
-    draw_boat(screen, xb, yb)
-    draw_boat(screen,environment.agent.position.point.x,environment.agent.position.point.y)
-
-    environment.step(env.Point(x_speed,y_speed))
+    # draw_boat(screen, xb, yb)
+    # draw_boat(screen,environment.agent.position.point.x,environment.agent.position.point.y)
+    #
+    # environment.step(env.Point(x_speed,y_speed))
 
     # Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
