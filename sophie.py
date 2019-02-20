@@ -3,7 +3,6 @@ import os, sys
 import time
 import environment as env
 
-# Define some colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
@@ -113,7 +112,6 @@ while not done:
     if yb == 0:
         speed = -speed
 
-
     if x_coord < 0:
         x_coord = 0
     elif x_coord > 680:
@@ -133,7 +131,7 @@ while not done:
     screen.fill(BLUE)
     all_sprites_list.draw(screen)
     draw_boat(screen, xb, yb)
-    draw_boat(screen,environment.agent.position.point.x, penvironment.agent.position.point.y)
+    draw_boat(screen,environment.agent.position.point.x, environment.agent.position.point.y)
     for b in environment.boats:
         draw_boat(screen, b.position.point.x, b.position.point.y)
     
