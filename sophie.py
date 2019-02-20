@@ -20,22 +20,24 @@ class Ferry(pygame.sprite.Sprite):
 
 pygame.init()
 
+display_width = 700
+display_height = 500
+
+env_speed = 1
+env_dim = [display_width, display_height]
+environment = env.generate_scenario(env_speed, env_dim)
 
 xb = 450
 yb = 0
 x_coord = 10
 y_coord = 10
 
-
-environment = env.generate_scenario(1,[700,500])
-
-display_width = 700
-display_height = 500
 size = [display_width, display_height]
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Ferrytale")
 
 boat_list = pygame.sprite.Group()
+dock = pygame.sprite.Group()
 all_sprites_list = pygame.sprite.Group()
 
 boat = Ferry(GREEN, 20, 20)
@@ -51,11 +53,11 @@ myboat.rect.y = y_coord
 all_sprites_list.add(myboat)
 
 
-# def ourboat(screen, x, y):
-#     pygame.draw.rect(screen, BLACK, [1 + x, y, 20, 20], 0)
-#
-# def draw_boat(boat, x, y):
-#     pygame.draw.rect(boat, GREEN, [x, y, 20, 20], 0)
+def ourboat(screen, x, y):
+     pygame.draw.rect(screen, BLACK, [1 + x, y, 20, 20], 0)
+
+def draw_boat(boat, x, y):
+     pygame.draw.rect(boat, GREEN, [x, y, 20, 20], 0)
 
 done = False
 
@@ -111,6 +113,7 @@ while not done:
     if yb == 0:
         speed = -speed
 
+
     if x_coord < 0:
         x_coord = 0
     elif x_coord > 680:
@@ -129,12 +132,15 @@ while not done:
 
     screen.fill(BLUE)
     all_sprites_list.draw(screen)
-    # draw_boat(screen, xb, yb)
-    # draw_boat(screen,environment.agent.position.point.x,environment.agent.position.point.y)
-    #
-    # environment.step(env.Point(x_speed,y_speed))
+    draw_boat(screen, xb, yb)
+    draw_boat(screen,environment.agent.position.point.x, penvironment.agent.position.point.y)
+    for b in environment.boats:
+        draw_boat(screen, b.position.point.x, b.position.point.y)
+    
+    nextState, reward, env_done = environment.step(env.Point(x_speed, y_speed))
 
-    # Go ahead and update the screen with what we've drawn.
+    if env_done:
+        environment = env.generate_scenario(env_speed, env_dim)
     pygame.display.flip()
 
     # Limit frames per second
