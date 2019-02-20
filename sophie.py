@@ -4,7 +4,7 @@ import pygame
 import os, sys
 import random
 import time
-
+import environment as env
 
 
 
@@ -15,7 +15,6 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 BLUE=(0,128,180)
 
-
 class ferry(pygame.sprite.Sprite):
     def __init__(self, BLACK, width, height):
         super().__init__()
@@ -24,6 +23,8 @@ class ferry(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 pygame.init()
+
+environment = env.generate_scenario(0.16,[700,500])
 
 display_width = 700
 display_height = 500
@@ -155,7 +156,8 @@ while not done:
     draw_stick_figure(screen, x_coord, y_coord)
 
     draw_boat(screen, xb, yb)
-
+    draw_boat(screen,environment.agent.position.point.x,environment.agent.position.point.y)
+    environment.step(env.Point(0.1,0.1))
 
     # Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
