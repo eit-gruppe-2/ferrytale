@@ -20,7 +20,6 @@ class Ferry(pygame.sprite.Sprite):
 
 pygame.init()
 
-<<<<<<< HEAD
 display_width = 700
 display_height = 500
 
@@ -29,20 +28,12 @@ env_dim = [display_width, display_height]
 environment = env.generate_scenario(env_speed, env_dim)
 
 
-=======
-<<<<<<< HEAD
 
 xb = 450
 yb = 0
 x_coord = 10
 y_coord = 10
 
-
-environment = env.generate_scenario(1,[700,500])
-
-display_width = 700
-display_height = 500
->>>>>>> 7897f4ff5afdce15e4f8d13f03f77217fa957699
 size = [display_width, display_height]
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Ferrytale")

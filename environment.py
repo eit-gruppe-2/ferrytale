@@ -38,6 +38,11 @@ class Boat:
     def is_within_distance(self, distance, other_point):
         return self.position.distance(other_point) < distance
 
+
+class Action:
+    pass
+
+
 class Environment:
 
     boats = []
