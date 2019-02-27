@@ -8,14 +8,13 @@ from itertools import product
 Point = namedtuple("Point", ["x", "y"])
 
 agent_image = pygame.image.load("./assets/boat_shop.png")
-dock_image = pygame.image.load("./assets/Artis_dock.png")
+dock_image = pygame.image.load("./assets/dock.png")
 pirate_ship_image = pygame.image.load("./assets/PirateShip.png")
 
 class Dock(pygame.sprite.Sprite):
     def __init__(self, point):
         super().__init__()
-        self.image = pygame.Surface([100, 80])
-        self.image.fill((100, 100, 100))
+        self.image = dock_image 
         self.rect = self.image.get_rect()
         self.rect.x = point.x
         self.rect.y = point.y
@@ -147,7 +146,7 @@ class Environment:
 
         collisions = pygame.sprite.spritecollide(self.state.agent, collidableSprites, False)
         number_of_collisions = len(collisions)
-
+                
         return number_of_collisions > 0
 
     def get_reward(self):
@@ -164,7 +163,7 @@ def position_bottom_center(dimensions):
 
 
 def point_top_center(dimensions):
-    return Point(dimensions[0] / 2, 0)
+    return Point(dimensions[0] / 2 - 50, -20)
 
 
 def point_right_center(dimensions):
