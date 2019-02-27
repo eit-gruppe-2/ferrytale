@@ -136,22 +136,31 @@ class Environment:
             boat.step(self.speed)
 
         nextState = self.state
-        reward = self.get_reward()
-        return nextState, reward, self.is_done()
+        numberofcol , colReward = self.is_done()
+        reward = self.get_reward() + colReward
+        return nextState, reward, numberofcol
 
     def is_done(self):
         # Done if agent has reached goal
         collidableSprites = pygame.sprite.Group()
         collidableSprites.add(self.state.goal)
         collidableSprites.add(self.state.boats)
-
         collisions = pygame.sprite.spritecollide(self.state.agent, collidableSprites, False)
         number_of_collisions = len(collisions)
-
-        return number_of_collisions > 0
+        col = 0
+        col_reward=0
+        for x in collisions:
+            if x == self.state.goal:
+                col_reward = 1000
+                print('Du klarte det')
+            if x in self.state.boats:
+                print('Du kræsja')
+                col += 1
+                col_reward += -500*col
+        return number_of_collisions > 0, col_reward
 
     def get_reward(self):
-        return -self.get_distance_between_agent_goal()
+        return - self.get_distance_between_agent_goal()
 
     def get_distance_between_agent_goal(self):
         a = self.state.agent.rect

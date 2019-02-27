@@ -89,6 +89,7 @@ def run_game():
         all_sprites_list.draw(screen)
 
         nextState, reward, env_done = environment.step(NO_ACTION)
+        print(reward)
 
         if env_done:
             return True
