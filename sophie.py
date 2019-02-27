@@ -18,6 +18,15 @@ class Ferry(pygame.sprite.Sprite):
         self.image.fill(color)
         self.rect = self.image.get_rect()
 
+
+def text_to_screen(screen, text, x, y, size = 30 ,
+            color = (24,45,62), font_type = 'Helvetica'):
+    text = str(text)
+    font = pygame.font.SysFont(font_type, size)
+    text = font.render(text, True, color)
+    screen.blit(text, (x, y))
+
+
 pygame.init()
 
 def run_game():
@@ -151,6 +160,7 @@ def run_game():
         if env_done:
             return True
 
+        text_to_screen(screen, "Reward {0}".format(round(reward)), display_width - 160, display_height - 50)
         pygame.display.flip()
 
         # Limit frames per second
