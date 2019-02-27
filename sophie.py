@@ -32,8 +32,8 @@ pygame.init()
 
 
 def run_game():
-    display_width = 1100
-    display_height = 800
+    display_width = 800
+    display_height = 600
 
     env_speed = 1
     env_dim = [display_width, display_height]

@@ -131,6 +131,33 @@ class VisibleState:
         self.agent = agent
         self.top_shore = top_shore
 
+def rect_distance(rect1, rect2):
+    x1, y1 = rect1.topleft
+    x1b, y1b = rect1.bottomright
+    x2, y2 = rect2.topleft
+    x2b, y2b = rect2.bottomright
+    left = x2b < x1
+    right = x1b < x2
+    top = y2b < y1
+    bottom = y1b < y2
+    if bottom and left:
+        return math.hypot(x2b-x1, y2-y1b)
+    elif left and top:
+        return math.hypot(x2b-x1, y2b-y1)
+    elif top and right:
+        return math.hypot(x2-x1b, y2b-y1)
+    elif right and bottom:
+        return math.hypot(x2-x1b, y2-y1b)
+    elif left:
+        return x1 - x2b
+    elif right:
+        return x2 - x1b
+    elif top:
+        return y1 - y2b
+    elif bottom:
+        return y2 - y1b
+    else:  # rectangles intersect
+        return 0.
 
 
 class Environment:
@@ -163,25 +190,35 @@ class Environment:
             boat.step(self.speed)
 
         nextState = self.state
-        reward = self.get_reward()
-        return nextState, reward, self.is_done()
+        done, colReward = self.is_done()
+        reward = self.get_reward() + colReward
+        return nextState, reward, done
 
     def is_done(self):
         # Done if agent has reached goal
         collidableSprites = pygame.sprite.Group()
+        collidableSprites.add(self.state.top_shore)
         collidableSprites.add(self.state.goal)
         collidableSprites.add(self.state.boats)
-
         collisions = pygame.sprite.spritecollide(self.state.agent, collidableSprites, False)
         number_of_collisions = len(collisions)
-                
-        return number_of_collisions > 0
+        col = 0
+        col_reward=0
+        for collision in collisions:
+            if collision == self.state.goal:
+                col_reward = 10000
+            if collision in self.state.boats:
+                col += 1
+                col_reward -= 5000*col
+            if collision == self.state.top_shore:
+                col_reward -= 5000
+        return number_of_collisions > 0, col_reward
 
     def get_reward(self):
-        return -self.get_distance_between_agent_goal()
+        return - self.get_distance_between_agent_goal()
 
     def get_distance_between_agent_goal(self):
-        return distance_between_rect(self.state.agent.rect, self.state.goal.rect)
+        return rect_distance(self.state.agent.rect, self.state.goal.rect)
         #a = self.state.agent.rect
         #g = self.state.goal.rect
         #return math.sqrt((a.x - g.x) ** 2 + (a.y - g.y) ** 2)
@@ -214,15 +251,6 @@ def point_right_center(dimensions):
     return Environment(VisibleState(boats, goal, agent), , dimensions, speed)
 """
 
-if __name__ == "__main__":
-    env = generate_scenario(0.16, [1000, 1400])
-
-    print("Before", env.state.agent.rect)
-    env.step(possibleActions[0])
-    print("After 1", env.state.agent.rect)
-
-    env.step(possibleActions[1])
-    print("After 2", env.state.agent.rect)
 
 
 def myformula(formula, **kwargs):
