@@ -53,8 +53,6 @@ class Boat(pygame.sprite.Sprite):
         y = self.velocity.y + action.vertical_acc.value
         self.velocity = Point(x, y)
 
-    def step(self, speed):
-        self.position.step(speed)
 
     def step(self, time):
         self.rect.x = self.rect.x + time * self.velocity.x * 0.5
@@ -64,6 +62,9 @@ class Boat(pygame.sprite.Sprite):
         return False
         #return self.position.distance(other_point) < distance
 
+    def penaltyCollision(self, formula, **kwargs):
+        expr = sy.sympify(formula)
+        return expr.evalf(subs=kwargs)
 
 class VerticalAccelerationChoice(Enum):
     BACK = -1
@@ -118,7 +119,7 @@ class Environment:
         # Done if agent has reached goal
         agentSprite = pygame.sprite.Group()
         agentSprite.add(self.agent)
-        return pygame.sprite.spritecollide(self.goal, agentSprite, False)
+        return len(pygame.sprite.spritecollide(self.goal, agentSprite, False)) > 0
 
 def position_bottom_center(dimensions):
     return Point(dimensions[0] / 2, dimensions[1])
@@ -152,4 +153,25 @@ if __name__ == "__main__":
     print("After 1", env.agent.rect)
 
     env.step(possibleActions[1])
+    print("After 2", env.agent.rect)
+
+
+
+
+def myformula(formula, **kwargs):
+    expr = sy.sympify(formula)
+    return expr.evalf(subs=kwargs)
+
+if __name__ == "__main__":
+
+    env = generate_scenario(0.16, [500, 700])
+
+    dist = env.agent.distanceToOther(env.boats[0].position.point)
+    print("cost value:",env.agent.penaltyCollision(formula="2*x+1", x = dist))
+
+    print("Before", env.agent.rect)
+    env.step(Point(10, 10))
+    print("After 1", env.agent.rect)
+
+    env.step(Point(7, 7))
     print("After 2", env.agent.rect)

@@ -20,138 +20,147 @@ class Ferry(pygame.sprite.Sprite):
 
 pygame.init()
 
-display_width = 700
-display_height = 500
+def run_game():
 
-env_speed = 1
-env_dim = [display_width, display_height]
-environment = env.generate_scenario(env_speed, env_dim)
+    display_width = 700
+    display_height = 500
 
-xb = 450
-yb = 0
-x_coord = 10
-y_coord = 10
+    env_speed = 1
+    env_dim = [display_width, display_height]
+    environment = env.generate_scenario(env_speed, env_dim)
 
-size = [display_width, display_height]
-screen = pygame.display.set_mode(size)
-pygame.display.set_caption("Ferrytale")
+    xb = 450
+    yb = 0
+    x_coord = 10
+    y_coord = 10
 
-boat_list = pygame.sprite.Group()
-dock = pygame.sprite.Group()
-all_sprites_list = pygame.sprite.Group()
-all_sprites_list.add(environment.goal)
-boat = Ferry(GREEN, 20, 20)
-boat.rect.x = xb
-boat.rect.y = yb
+    size = [display_width, display_height]
+    screen = pygame.display.set_mode(size)
+    pygame.display.set_caption("Ferrytale")
 
-boat_list.add(boat)
-all_sprites_list.add(boat)
-
-myboat = Ferry(BLACK,20,20)
-myboat.rect.x = x_coord
-myboat.rect.y = y_coord
-all_sprites_list.add(myboat)
-all_sprites_list.add(environment.agent)
-boat_list.add(environment.boats)
-all_sprites_list.add(environment.boats)
-
-NO_ACTION = env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.NONE)
-
-def ourboat(screen, x, y):
-     pygame.draw.rect(screen, BLACK, [1 + x, y, 20, 20], 0)
-
-def draw_boat(boat, x, y):
-     pygame.draw.rect(boat, GREEN, [x, y, 20, 20], 0)
-
-done = False
-
-# Used to manage how fast the screen updates
-clock = pygame.time.Clock()
-
-# Hide the mouse cursor
-pygame.mouse.set_visible(0)
-
-
-# Speed in pixels per frame
-x_speed = 0
-y_speed = 0
-speed = 3
-# Current position
-
-
-# -------- Main Program Loop -----------
-while not done:
-    # --- Event Processing
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
-            # User pressed down on a key
-
-        elif event.type == pygame.KEYDOWN:
-            # Figure out if it was an arrow key. If so
-            # adjust speed.
-            if event.key == pygame.K_LEFT:
-                environment.step(env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.LEFT))
-                x_speed = -3
-            elif event.key == pygame.K_RIGHT:
-                environment.step(env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.RIGHT))
-                x_speed = 3
-            elif event.key == pygame.K_UP:
-                environment.step(env.Action(env.VerticalAccelerationChoice.BACK, env.HorizontalAccelerationChoice.NONE))
-                y_speed = -3
-            elif event.key == pygame.K_DOWN:
-                environment.step(env.Action(env.VerticalAccelerationChoice.FORWARD, env.HorizontalAccelerationChoice.NONE))
-                y_speed = 3
-
-        # User let up on a key
-        elif event.type == pygame.KEYUP:
-            # If it is an arrow key, reset vector back to zero
-            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                x_speed = 0
-            elif event.key == pygame.K_UP or event.key == pygame.K_DOWN:
-                y_speed = 0
-        
-
-
-    x_coord = x_coord + x_speed
-    y_coord = y_coord + y_speed
-
-    yb = yb + speed
-
-    if yb == 480:
-        speed = - speed
-    if yb == 0:
-        speed = -speed
-
-
-    if x_coord < 0:
-        x_coord = 0
-    elif x_coord > 680:
-        x_coord = 680
-    if y_coord < 0:
-        y_coord = 0
-    elif y_coord > 480:
-        y_coord = 480
-
-    myboat.rect.x = x_coord
-    myboat.rect.y = y_coord
+    boat_list = pygame.sprite.Group()
+    dock = pygame.sprite.Group()
+    all_sprites_list = pygame.sprite.Group()
+    all_sprites_list.add(environment.goal)
+    boat = Ferry(GREEN, 20, 20)
     boat.rect.x = xb
     boat.rect.y = yb
-    if pygame.sprite.spritecollide(myboat, boat_list, True):
-        done = True
 
-    screen.fill(BLUE)
-    all_sprites_list.draw(screen)
-    draw_boat(screen, xb, yb)
+    boat_list.add(boat)
+    all_sprites_list.add(boat)
 
-    nextState, reward, env_done = environment.step(NO_ACTION)
+    myboat = Ferry(BLACK,20,20)
+    myboat.rect.x = x_coord
+    myboat.rect.y = y_coord
+    all_sprites_list.add(myboat)
+    all_sprites_list.add(environment.agent)
+    boat_list.add(environment.boats)
+    all_sprites_list.add(environment.boats)
 
-    if env_done:
-        environment = env.generate_scenario(env_speed, env_dim)
-    pygame.display.flip()
+    NO_ACTION = env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.NONE)
 
-    # Limit frames per second
-    clock.tick(60)
+    def ourboat(screen, x, y):
+        pygame.draw.rect(screen, BLACK, [1 + x, y, 20, 20], 0)
+
+    def draw_boat(boat, x, y):
+        pygame.draw.rect(boat, GREEN, [x, y, 20, 20], 0)
+
+    done = False
+
+    # Used to manage how fast the screen updates
+    clock = pygame.time.Clock()
+
+    # Hide the mouse cursor
+    pygame.mouse.set_visible(0)
+
+
+    # Speed in pixels per frame
+    x_speed = 0
+    y_speed = 0
+    speed = 3
+    # Current position
+
+
+    # -------- Main Program Loop -----------
+    while not done:
+        # --- Event Processing
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
+                # User pressed down on a key
+
+            elif event.type == pygame.KEYDOWN:
+                # Figure out if it was an arrow key. If so
+                # adjust speed.
+                if event.key == pygame.K_LEFT:
+                    environment.step(env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.LEFT))
+                    x_speed = -3
+                elif event.key == pygame.K_RIGHT:
+                    environment.step(env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.RIGHT))
+                    x_speed = 3
+                elif event.key == pygame.K_UP:
+                    environment.step(env.Action(env.VerticalAccelerationChoice.BACK, env.HorizontalAccelerationChoice.NONE))
+                    y_speed = -3
+                elif event.key == pygame.K_DOWN:
+                    environment.step(env.Action(env.VerticalAccelerationChoice.FORWARD, env.HorizontalAccelerationChoice.NONE))
+                    y_speed = 3
+
+            # User let up on a key
+            elif event.type == pygame.KEYUP:
+                # If it is an arrow key, reset vector back to zero
+                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                    x_speed = 0
+                elif event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+                    y_speed = 0
+            
+
+
+        x_coord = x_coord + x_speed
+        y_coord = y_coord + y_speed
+
+        yb = yb + speed
+
+        if yb == 480:
+            speed = - speed
+        if yb == 0:
+            speed = -speed
+
+
+        if x_coord < 0:
+            x_coord = 0
+        elif x_coord > 680:
+            x_coord = 680
+        if y_coord < 0:
+            y_coord = 0
+        elif y_coord > 480:
+            y_coord = 480
+
+        myboat.rect.x = x_coord
+        myboat.rect.y = y_coord
+        boat.rect.x = xb
+        boat.rect.y = yb
+        if pygame.sprite.spritecollide(myboat, boat_list, True):
+            return True
+
+        screen.fill(BLUE)
+        all_sprites_list.draw(screen)
+        draw_boat(screen, xb, yb)
+
+        nextState, reward, env_done = environment.step(NO_ACTION)
+
+        if env_done:
+            environment = env.generate_scenario(env_speed, env_dim)
+            return True
+        pygame.display.flip()
+
+        # Limit frames per second
+        clock.tick(60)
+
+    return False
+
+restart = True
+while restart:
+    restart = run_game()
 
 # Close the window and quit.
 pygame.quit()
