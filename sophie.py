@@ -19,13 +19,8 @@ class Ferry(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 
-<<<<<<< HEAD
 def text_to_screen(screen, text, x, y, size=30,
                    color=(24, 45, 62), font_type='Helvetica'):
-=======
-def text_to_screen(screen, text, x, y, size = 30 ,
-            color = (24,45,62), font_type = 'Helvetica'):
->>>>>>> f709726ac8218b0497b33684a1f6bf5dd79c0ec6
     text = str(text)
     font = pygame.font.SysFont(font_type, size)
     text = font.render(text, True, color)
