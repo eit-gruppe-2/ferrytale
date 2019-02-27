@@ -10,6 +10,15 @@ Point = namedtuple("Point", ["x", "y"])
 agent_image = pygame.image.load("./assets/boat_shop.png")
 dock_image = pygame.image.load("./assets/dock.png")
 pirate_ship_image = pygame.image.load("./assets/PirateShip.png")
+grass_image = pygame.image.load("./assets/grass.png")
+
+def distance_between_rect(rect1, rect2):
+    x1, y1 = rect1.x + rect1.width / 2, rect1.y + rect1.height / 2
+    x2, y2 = rect2.x + rect2.width / 2, rect2.y + rect2.height / 2
+    dx = max(abs(x1 - x2) - rect2.width / 2, 0)
+    dy = max(abs(y1 - y2) - rect2.height / 2, 0)
+    return dx * dx + dy * dy
+
 
 class Dock(pygame.sprite.Sprite):
     def __init__(self, point):
@@ -19,6 +28,13 @@ class Dock(pygame.sprite.Sprite):
         self.rect.x = point.x
         self.rect.y = point.y
 
+class Shore(pygame.sprite.Sprite):
+    def __init__(self, point):
+        super().__init__()
+        self.image = grass_image
+        self.rect = self.image.get_rect()
+        self.rect.x = point.x
+        self.rect.y = point.y
 
 class Position:
     point = None
@@ -52,15 +68,22 @@ class Boat(pygame.sprite.Sprite):
         self.rect.x = initialPosition.point.x
         self.rect.y = initialPosition.point.y
         self.velocity = initialPosition.velocity
+        #self.image = pygame.transform.rotate(self.image, math.degrees(math.atan2(self.velocity.y, self.velocity.x) ))
+
 
     def do_action(self, action):
         x = self.velocity.x + action.horizontal_acc.value
         y = self.velocity.y + action.vertical_acc.value
         self.velocity = Point(x, y)
+        #self.image = pygame.transform.rotate(self.image, math.degrees(math.atan2(action.vertical_acc.value, action.horizontal_acc.value) ))
+
+
 
     def step(self, time):
         self.rect.x = self.rect.x + time * self.velocity.x * 0.5
         self.rect.y = self.rect.y + time * self.velocity.y * 0.5
+
+
 
     def is_within_distance(self, distance, other_point):
         return False
@@ -100,18 +123,23 @@ class VisibleState:
     boats = []
     goal = None
     agent = None
+    top_shore = None
 
-    def __init__(self, boats, goal, agent):
+    def __init__(self, boats, goal, agent, top_shore):
         self.boats = boats
         self.goal = goal
         self.agent = agent
+        self.top_shore = top_shore
+
 
 
 class Environment:
     speed = 1
     dimensions = [0, 0]
 
-    def __init__(self, visible_state, speed, dimensions):
+    shore = None
+
+    def __init__(self, visible_state, dimensions, speed=1):
         self.state = visible_state
         self.speed = speed
         self.dimensions = dimensions
@@ -153,9 +181,10 @@ class Environment:
         return -self.get_distance_between_agent_goal()
 
     def get_distance_between_agent_goal(self):
-        a = self.state.agent.rect
-        g = self.state.goal.rect
-        return math.sqrt((a.x - g.x) ** 2 + (a.y - g.y) ** 2)
+        return distance_between_rect(self.state.agent.rect, self.state.goal.rect)
+        #a = self.state.agent.rect
+        #g = self.state.goal.rect
+        #return math.sqrt((a.x - g.x) ** 2 + (a.y - g.y) ** 2)
 
 
 def position_bottom_center(dimensions):
@@ -172,7 +201,7 @@ def point_right_center(dimensions):
 
 # Speed: Time between frames
 # Dimenstions: [width: number, height: number]
-def generate_scenario(speed, dimensions):
+"""def generate_scenario(speed, dimensions):
     # Generates same environment as seen in meeting with milliampere
     agent = Boat(Position(position_bottom_center(dimensions), Point(0, -1)), image=agent_image)
 
@@ -180,12 +209,13 @@ def generate_scenario(speed, dimensions):
     boats = [collidable_boat]
 
     goal = Dock(point_top_center(dimensions))
+    shore = Shore(point_top_center(dimensions))
 
-    return Environment(VisibleState(boats, goal, agent), speed, dimensions)
-
+    return Environment(VisibleState(boats, goal, agent), , dimensions, speed)
+"""
 
 if __name__ == "__main__":
-    env = generate_scenario(0.16, [500, 700])
+    env = generate_scenario(0.16, [1000, 1400])
 
     print("Before", env.state.agent.rect)
     env.step(possibleActions[0])
@@ -201,6 +231,8 @@ def myformula(formula, **kwargs):
 
 
 if __name__ == "__main__":
+
+
     env = generate_scenario(0.16, [500, 700])
 
     dist = env.state.agent.distanceToOther(env.state.boats[0].position.point)

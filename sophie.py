@@ -2,6 +2,7 @@ import pygame
 import os, sys
 import time
 import environment as env
+from scenarios import generate_scenario
 
 # Define some colors
 BLACK = (0, 0, 0)
@@ -31,19 +32,20 @@ pygame.init()
 
 
 def run_game():
-    display_width = 700
-    display_height = 500
+    display_width = 1100
+    display_height = 800
 
     env_speed = 1
     env_dim = [display_width, display_height]
-    environment = env.generate_scenario(env_speed, env_dim)
+    environment = generate_scenario(env_speed, env_dim, 0)
 
     size = [display_width, display_height]
     screen = pygame.display.set_mode(size)
     pygame.display.set_caption("Ferrytale")
 
-    boat_list = pygame.sprite.Group()
+    boat_list = pygame.sprite.OrderedUpdates()
     all_sprites_list = pygame.sprite.Group()
+    all_sprites_list.add(environment.state.top_shore)
     all_sprites_list.add(environment.state.goal)
     all_sprites_list.add(environment.state.agent)
     boat_list.add(environment.state.boats)
