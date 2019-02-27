@@ -41,7 +41,7 @@ def run_game():
     boat_list = pygame.sprite.Group()
     dock = pygame.sprite.Group()
     all_sprites_list = pygame.sprite.Group()
-    all_sprites_list.add(environment.goal)
+    all_sprites_list.add(environment.state.goal)
     boat = Ferry(GREEN, 20, 20)
     boat.rect.x = xb
     boat.rect.y = yb
@@ -53,9 +53,9 @@ def run_game():
     myboat.rect.x = x_coord
     myboat.rect.y = y_coord
     all_sprites_list.add(myboat)
-    all_sprites_list.add(environment.agent)
-    boat_list.add(environment.boats)
-    all_sprites_list.add(environment.boats)
+    all_sprites_list.add(environment.state.agent)
+    boat_list.add(environment.state.boats)
+    all_sprites_list.add(environment.state.boats)
 
     NO_ACTION = env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.NONE)
 
@@ -149,8 +149,8 @@ def run_game():
         nextState, reward, env_done = environment.step(NO_ACTION)
 
         if env_done:
-            environment = env.generate_scenario(env_speed, env_dim)
             return True
+
         pygame.display.flip()
 
         # Limit frames per second
