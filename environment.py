@@ -7,6 +7,17 @@ from itertools import product
 
 Point = namedtuple("Point", ["x", "y"])
 
+class Dock(pygame.sprite.Sprite):
+    def __init__(self, point):
+        super().__init__()
+        self.image = pygame.Surface([100, 80])
+        self.image.fill((100, 100, 100))
+        self.rect = self.image.get_rect()
+        self.rect.x = point.x
+        self.rect.y = point.y
+
+
+
 class Position:
     point = None
     velocity = None
@@ -31,7 +42,7 @@ class Boat(pygame.sprite.Sprite):
 
     def __init__(self, initialPosition):
         super().__init__()
-        self.image = pygame.Surface([10, 10])
+        self.image = pygame.Surface([40, 40])
         self.rect = self.image.get_rect()
         self.rect.x = initialPosition.point.x
         self.rect.y = initialPosition.point.y
@@ -42,8 +53,6 @@ class Boat(pygame.sprite.Sprite):
         y = self.velocity.y + action.vertical_acc.value
         self.velocity = Point(x, y)
 
-    def step(self, speed):
-        self.position.step(speed)
 
     def step(self, time):
         self.rect.x = self.rect.x + time * self.velocity.x * 0.5
@@ -53,6 +62,9 @@ class Boat(pygame.sprite.Sprite):
         return False
         #return self.position.distance(other_point) < distance
 
+    def penaltyCollision(self, formula, **kwargs):
+        expr = sy.sympify(formula)
+        return expr.evalf(subs=kwargs)
 
 class VerticalAccelerationChoice(Enum):
     BACK = -1
@@ -75,30 +87,17 @@ class Action:
 
 possibleActions = [Action(vertical_acc, horizontal_acc) for vertical_acc, horizontal_acc in product(VerticalAccelerationChoice, HorizontalAccelerationChoice)]
 
-"""possibleActions = [
-    Action(AccelerationChoice.BACK, DirectionChoice.LEFT),
-    Action(AccelerationChoice.BACK, DirectionChoice.NONE),
-    Action(AccelerationChoice.BACK, DirectionChoice.RIGHT),
-    Action(AccelerationChoice.NONE, DirectionChoice.LEFT),
-    Action(AccelerationChoice.NONE, DirectionChoice.NONE),
-    Action(AccelerationChoice.NONE, DirectionChoice.RIGHT),
-    Action(AccelerationChoice.FORWARD, DirectionChoice.LEFT),
-    Action(AccelerationChoice.FORWARD, DirectionChoice.NONE),
-    Action(AccelerationChoice.FORWARD, DirectionChoice.RIGHT),
-]"""
-
-
 class Environment:
 
     boats = []
-    goalPoint = None
+    goal = None
     agent = None
     speed = 1
     dimensions = [0, 0]
 
-    def __init__(self, boats, goalPoint, agent, speed, dimensions):
+    def __init__(self, boats, goal, agent, speed, dimensions):
         self.boats = boats
-        self.goalPoint = goalPoint
+        self.goal = goal
         self.agent = agent
         self.speed = speed
         self.dimensions = dimensions
@@ -118,11 +117,9 @@ class Environment:
 
     def is_done(self):
         # Done if agent has reached goal
-
-        if self.agent.is_within_distance(20, self.goalPoint):
-            return True
-        
-        return False
+        agentSprite = pygame.sprite.Group()
+        agentSprite.add(self.agent)
+        return len(pygame.sprite.spritecollide(self.goal, agentSprite, False)) > 0
 
 def position_bottom_center(dimensions):
     return Point(dimensions[0] / 2, dimensions[1])
@@ -132,19 +129,20 @@ def point_top_center(dimensions):
 
 def point_right_center(dimensions):
     return Point(dimensions[0], dimensions[1] / 2)
+
 # Speed: Time between frames
 # Dimenstions: [width: number, height: number]
 def generate_scenario(speed, dimensions):
 
     # Generates same environment as seen in meeting with milliampere
-    agent = Boat(Position(Point(dimensions[0] / 2, dimensions[1] / 2), Point(0, 0)))
+    agent = Boat(Position(position_bottom_center(dimensions), Point(0, -1)))
 
-    collidable_boat = Boat(Position(point_right_center(dimensions), Point(-4, 0)))
+    collidable_boat = Boat(Position(point_right_center(dimensions), Point(-5, 0)))
     boats = [collidable_boat]
 
-    goalPoint = point_top_center(dimensions)
+    goal = Dock(point_top_center(dimensions))
 
-    return Environment(boats, goalPoint, agent, speed, dimensions)
+    return Environment(boats, goal, agent, speed, dimensions)
 
 if __name__ == "__main__": 
 
@@ -155,4 +153,25 @@ if __name__ == "__main__":
     print("After 1", env.agent.rect)
 
     env.step(possibleActions[1])
+    print("After 2", env.agent.rect)
+
+
+
+
+def myformula(formula, **kwargs):
+    expr = sy.sympify(formula)
+    return expr.evalf(subs=kwargs)
+
+if __name__ == "__main__":
+
+    env = generate_scenario(0.16, [500, 700])
+
+    dist = env.agent.distanceToOther(env.boats[0].position.point)
+    print("cost value:",env.agent.penaltyCollision(formula="2*x+1", x = dist))
+
+    print("Before", env.agent.rect)
+    env.step(Point(10, 10))
+    print("After 1", env.agent.rect)
+
+    env.step(Point(7, 7))
     print("After 2", env.agent.rect)
