@@ -1,6 +1,9 @@
 import numpy as np
 import math
+import pygame
+from enum import Enum
 from collections import namedtuple
+from itertools import product
 
 Point = namedtuple("Point", ["x", "y"])
 
@@ -16,31 +19,73 @@ class Position:
         self.velocity = velocity
 
     def step(self, time):
-        self.point = Point(self.point.x + time * self.velocity.x, self.point.y + time * self.velocity.y)
+        return Point(self.point.x + time * self.velocity.x, self.point.y + time * self.velocity.y)
 
     def distance(self, to):
         return math.sqrt((self.point.x - to.x)**2 + (self.point.y - to.y)**2)
     
 
 
-class Boat:
-    position = None
+class Boat(pygame.sprite.Sprite):
+    velocity = Point(0, 0)
 
     def __init__(self, initialPosition):
-        self.position = initialPosition
+        super().__init__()
+        self.image = pygame.Surface([10, 10])
+        self.rect = self.image.get_rect()
+        self.rect.x = initialPosition.point.x
+        self.rect.y = initialPosition.point.y
+        self.velocity = initialPosition.velocity
 
-    def do_action(self, velocity):
-        self.position.velocity = velocity
+    def do_action(self, action):
+        x = self.velocity.x + action.horizontal_acc.value
+        y = self.velocity.y + action.vertical_acc.value
+        self.velocity = Point(x, y)
 
     def step(self, speed):
         self.position.step(speed)
 
-    def is_within_distance(self, distance, other_point):
-        return self.position.distance(other_point) < distance
+    def step(self, time):
+        self.rect.x = self.rect.x + time * self.velocity.x * 0.5
+        self.rect.y = self.rect.y + time * self.velocity.y * 0.5
 
+    def is_within_distance(self, distance, other_point):
+        return False
+        #return self.position.distance(other_point) < distance
+
+
+class VerticalAccelerationChoice(Enum):
+    BACK = -1
+    NONE = 0
+    FORWARD = 1
+
+class HorizontalAccelerationChoice(Enum):
+    LEFT = -1
+    NONE = 0
+    RIGHT = 1
 
 class Action:
-    pass
+    horizontal_acc = HorizontalAccelerationChoice.NONE
+    vertical_acc = VerticalAccelerationChoice.NONE
+
+    def __init__(self, vertical_acc, horizontal_acc):
+        self.vertical_acc = vertical_acc
+        self.horizontal_acc = horizontal_acc
+
+
+possibleActions = [Action(vertical_acc, horizontal_acc) for vertical_acc, horizontal_acc in product(VerticalAccelerationChoice, HorizontalAccelerationChoice)]
+
+"""possibleActions = [
+    Action(AccelerationChoice.BACK, DirectionChoice.LEFT),
+    Action(AccelerationChoice.BACK, DirectionChoice.NONE),
+    Action(AccelerationChoice.BACK, DirectionChoice.RIGHT),
+    Action(AccelerationChoice.NONE, DirectionChoice.LEFT),
+    Action(AccelerationChoice.NONE, DirectionChoice.NONE),
+    Action(AccelerationChoice.NONE, DirectionChoice.RIGHT),
+    Action(AccelerationChoice.FORWARD, DirectionChoice.LEFT),
+    Action(AccelerationChoice.FORWARD, DirectionChoice.NONE),
+    Action(AccelerationChoice.FORWARD, DirectionChoice.RIGHT),
+]"""
 
 
 class Environment:
@@ -77,12 +122,6 @@ class Environment:
         if self.agent.is_within_distance(20, self.goalPoint):
             return True
         
-        for boat in self.boats:
-            p = boat.position.point
-            if p.x > self.dimensions[0] or p.x < 0:
-                return False
-            if p.y > self.dimensions[1] or p.y < 0:
-                return True
         return False
 
 def position_bottom_center(dimensions):
@@ -98,7 +137,7 @@ def point_right_center(dimensions):
 def generate_scenario(speed, dimensions):
 
     # Generates same environment as seen in meeting with milliampere
-    agent = Boat(Position(position_bottom_center(dimensions), Point(0, 0)))
+    agent = Boat(Position(Point(dimensions[0] / 2, dimensions[1] / 2), Point(0, 0)))
 
     collidable_boat = Boat(Position(point_right_center(dimensions), Point(-4, 0)))
     boats = [collidable_boat]
@@ -111,9 +150,9 @@ if __name__ == "__main__":
 
     env = generate_scenario(0.16, [500, 700])
 
-    print("Before", env.agent.position.point)
-    env.step(Point(10, 10))
-    print("After 1", env.agent.position.point)
+    print("Before", env.agent.rect)
+    env.step(possibleActions[0])
+    print("After 1", env.agent.rect)
 
-    env.step(Point(7, 7))
-    print("After 2", env.agent.position.point)
+    env.step(possibleActions[1])
+    print("After 2", env.agent.rect)
