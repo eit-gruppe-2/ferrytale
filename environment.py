@@ -16,8 +16,6 @@ class Dock(pygame.sprite.Sprite):
         self.rect.x = point.x
         self.rect.y = point.y
 
-
-
 class Position:
     point = None
     velocity = None
@@ -34,7 +32,6 @@ class Position:
 
     def distance(self, to):
         return math.sqrt((self.point.x - to.x)**2 + (self.point.y - to.y)**2)
-    
 
 
 class Boat(pygame.sprite.Sprite):
@@ -53,7 +50,6 @@ class Boat(pygame.sprite.Sprite):
         y = self.velocity.y + action.vertical_acc.value
         self.velocity = Point(x, y)
 
-
     def step(self, time):
         self.rect.x = self.rect.x + time * self.velocity.x * 0.5
         self.rect.y = self.rect.y + time * self.velocity.y * 0.5
@@ -65,6 +61,7 @@ class Boat(pygame.sprite.Sprite):
     def penaltyCollision(self, formula, **kwargs):
         expr = sy.sympify(formula)
         return expr.evalf(subs=kwargs)
+
 
 class VerticalAccelerationChoice(Enum):
     BACK = -1
@@ -85,7 +82,8 @@ class Action:
         self.horizontal_acc = horizontal_acc
 
 
-possibleActions = [Action(vertical_acc, horizontal_acc) for vertical_acc, horizontal_acc in product(VerticalAccelerationChoice, HorizontalAccelerationChoice)]
+possibleActions = [Action(vertical_acc, horizontal_acc) for vertical_acc, horizontal_acc in product
+(VerticalAccelerationChoice, HorizontalAccelerationChoice)]
 
 class Environment:
 
@@ -102,7 +100,6 @@ class Environment:
         self.speed = speed
         self.dimensions = dimensions
 
-        
     def step(self, action):
 
         self.agent.do_action(action)
@@ -113,13 +110,17 @@ class Environment:
 
         nextState = None
         reward = 0
-        return nextState, reward, self.is_done()
+        return nextState, reward, self.is_done(), self.collision()
 
     def is_done(self):
         # Done if agent has reached goal
         agentSprite = pygame.sprite.Group()
         agentSprite.add(self.agent)
         return len(pygame.sprite.spritecollide(self.goal, agentSprite, False)) > 0
+
+    def collision(self):
+        return len(pygame.sprite.spritecollide(self.boats, self.agent, False)) > 0
+
 
 def position_bottom_center(dimensions):
     return Point(dimensions[0] / 2, dimensions[1])
@@ -139,7 +140,6 @@ def generate_scenario(speed, dimensions):
 
     collidable_boat = Boat(Position(point_right_center(dimensions), Point(-5, 0)))
     boats = [collidable_boat]
-
     goal = Dock(point_top_center(dimensions))
 
     return Environment(boats, goal, agent, speed, dimensions)
