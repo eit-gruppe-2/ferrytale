@@ -9,6 +9,7 @@ Point = namedtuple("Point", ["x", "y"])
 
 agent_image = pygame.image.load("./assets/boat_shop.png")
 dock_image = pygame.image.load("./assets/Artis_dock.png")
+pirate_ship_image = pygame.image.load("./assets/PirateShip.png")
 class Dock(pygame.sprite.Sprite):
     def __init__(self, point):
         super().__init__()
@@ -169,7 +170,7 @@ def generate_scenario(speed, dimensions):
     # Generates same environment as seen in meeting with milliampere
     agent = Boat(Position(position_bottom_center(dimensions), Point(0, -1)), image=agent_image)
 
-    collidable_boat = Boat(Position(point_right_center(dimensions), Point(-5, 0)))
+    collidable_boat = Boat(Position(point_right_center(dimensions), Point(-5, 0)), pirate_ship_image)
     boats = [collidable_boat]
 
     goal = Dock(point_top_center(dimensions))
