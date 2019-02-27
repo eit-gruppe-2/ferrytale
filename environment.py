@@ -141,9 +141,14 @@ class Environment:
 
     def is_done(self):
         # Done if agent has reached goal
-        agentSprite = pygame.sprite.Group()
-        agentSprite.add(self.state.agent)
-        return len(pygame.sprite.spritecollide(self.state.goal, agentSprite, False)) > 0
+        collidableSprites = pygame.sprite.Group()
+        collidableSprites.add(self.state.goal)
+        collidableSprites.add(self.state.boats)
+
+        collisions = pygame.sprite.spritecollide(self.state.agent, collidableSprites, False)
+        number_of_collisions = len(collisions)
+
+        return number_of_collisions > 0
 
     def get_reward(self):
         return -self.get_distance_between_agent_goal()
