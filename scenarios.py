@@ -71,7 +71,7 @@ def long_lasting(dimensions):
     current_pos = Position(point_right_center(dimensions), Point(-randint(10, 13), 0))
     for _ in range(10):
         boats.append(Boat(current_pos, image=choice(possible_boats)))
-        new_x = current_pos.point.x + randint(100, 500)
+        new_x = current_pos.point.x + randint(200, 1000)
         new_y = center_y + randint(-50, 50)
         velocity = Point(-randint(10, 13), 0)
         current_pos = Position(Point(new_x, new_y), velocity)

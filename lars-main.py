@@ -48,37 +48,42 @@ score_plot = []
 counter_plot = []
 
 
-def run_game():
+def run_game(display_screen=True):
     display_width = 700
     display_height = 600
 
     reward = 0
 
-    env_speed = 1
+    env_speed = 10
     env_dim = [display_width, display_height]
     environment = generate_scenario(env_speed, env_dim, ScenarioType.LONG_LASTING)
-
+    environment.given_rewards = []
     size = [display_width, display_height]
-    screen = pygame.display.set_mode(size)
-    pygame.display.set_caption("Ferrytale")
 
-    boat_list = pygame.sprite.OrderedUpdates()
-    all_sprites_list = pygame.sprite.Group()
-    all_sprites_list.add(environment.state.top_shore)
-    all_sprites_list.add(environment.state.bottom_shore)
-    all_sprites_list.add(environment.state.goal)
-    all_sprites_list.add(environment.state.agent)
-    
-    boat_list.add(environment.state.boats)
-    all_sprites_list.add(environment.state.boats)
+    if display_screen:
+        screen = pygame.display.set_mode(size)
+        pygame.display.set_caption("Ferrytale")
+
+        boat_list = pygame.sprite.OrderedUpdates()
+        all_sprites_list = pygame.sprite.Group()
+        all_sprites_list.add(environment.state.top_shore)
+        all_sprites_list.add(environment.state.bottom_shore)
+        all_sprites_list.add(environment.state.goal)
+        all_sprites_list.add(environment.state.agent)
+
+        boat_list.add(environment.state.boats)
+        all_sprites_list.add(environment.state.boats)
+        clock = pygame.time.Clock()
+        pygame.mouse.set_visible(0)
+        # Used to manage how fast the screen updates
+        clock = pygame.time.Clock()
+
+        # Hide the mouse cursor
+        pygame.mouse.set_visible(0)
+
+
 
     done = False
-
-    # Used to manage how fast the screen updates
-    clock = pygame.time.Clock()
-
-    # Hide the mouse cursor
-    pygame.mouse.set_visible(0)
 
 
     # -------- Main Program Loop -----------
@@ -93,34 +98,41 @@ def run_game():
         else:
             # Predict action based on the current state
             prediction = agent.model.predict(state_old.reshape(1, 49))
-            print("Prediction:", prediction[0])
+            #print("Prediction:", prediction[0])
             final_move = to_categorical(np.argmax(prediction[0]), num_classes=9)
             final_move = environment.index_to_action(np.nonzero(final_move)[0][0])
 
         # --- Event Processing
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True
+        if display_screen:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    done = True
 
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    environment.step(
-                        env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.LEFT))
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        environment.step(
+                            env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.LEFT))
 
-                elif event.key == pygame.K_RIGHT:
-                    environment.step(
-                        env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.RIGHT))
+                    elif event.key == pygame.K_RIGHT:
+                        environment.step(
+                            env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.RIGHT))
 
-                elif event.key == pygame.K_UP:
-                    environment.step(
-                        env.Action(env.VerticalAccelerationChoice.BACK, env.HorizontalAccelerationChoice.NONE))
+                    elif event.key == pygame.K_UP:
+                        environment.step(
+                            env.Action(env.VerticalAccelerationChoice.BACK, env.HorizontalAccelerationChoice.NONE))
 
-                elif event.key == pygame.K_DOWN:
-                    environment.step(
-                        env.Action(env.VerticalAccelerationChoice.FORWARD, env.HorizontalAccelerationChoice.NONE))
+                    elif event.key == pygame.K_DOWN:
+                        environment.step(
+                            env.Action(env.VerticalAccelerationChoice.FORWARD, env.HorizontalAccelerationChoice.NONE))
 
-        screen.fill(BLUE)
-        all_sprites_list.draw(screen)
+            screen.fill(BLUE)
+            all_sprites_list.draw(screen)
+
+            text_to_screen(screen, "Reward {0}".format(round(reward)), display_width - 160, display_height - 50)
+            pygame.display.flip()
+            
+            clock.tick(60)
+
 
         # Perform new move and get new reward
         next_state, reward, env_done = environment.step(final_move)
@@ -137,11 +149,8 @@ def run_game():
         if env_done or reward < -2000:
             done = True
 
-        text_to_screen(screen, "Reward {0}".format(round(reward)), display_width - 160, display_height - 50)
-        pygame.display.flip()
 
         # Limit frames per second
-        # clock.tick(60)
 
     agent.replay_new(agent.memory)
     agent.game_counter += 1
@@ -153,7 +162,9 @@ def run_game():
 
 restart = True
 while restart:
-    restart = run_game()
+    start = time.time()
+    restart = run_game(display_screen=False)
+    print("Game time:", time.time() - start, "ms")
     if agent.game_counter == 80:
         restart = False
 

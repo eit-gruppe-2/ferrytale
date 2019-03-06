@@ -5,7 +5,7 @@ import keras
 import random
 import numpy as np
 import pandas as pd
-
+import time
 
 class DQNAgent(object):
     def __init__(self):
@@ -56,7 +56,7 @@ class DQNAgent(object):
         model.add(Dropout(0.15))
         model.add(Dense(units=9, activation='softmax'))  # Current output_dim
         opt = Adam(self.learning_rate)
-        model.compile(loss='mse', optimizer=opt)  # 'mse'
+        model.compile(loss='mse', optimizer=opt, metrics=['accuracy'])  # 'mse'
 
         if weights:
             print("HEEEEEEEEEEEEEEEYYYYYYYYYYYYYY")
@@ -71,13 +71,28 @@ class DQNAgent(object):
             minibatch = random.sample(memory, 1000)
         else:
             minibatch = memory
+
+        avg_acc = 0
+        avg_loss = 0
+        
+
         for state, action, reward, next_state, done in minibatch:
+            #print("action", action, "reward", reward, "next_state", next_state, "done", done)
+            start = time.time()
             target = reward
             if not done:
                 target = reward + self.gamma * np.amax(self.model.predict(np.array([next_state]))[0])
+            #print("Target reward", target, reward, self.model.predict(np.array([next_state])))
             target_f = self.model.predict(np.array([state]))
             target_f[0][np.argmax(action)] = target
-            self.model.fit(np.array([state]), target_f, epochs=1, verbose=0)
+            start = time.time()
+
+            history = self.model.fit(np.array([state]), target_f, epochs=1, verbose=0)
+
+            avg_acc += history.history["acc"][0]
+            avg_loss += history.history["loss"][0]
+
+        print("Accuracy:", avg_acc / len(minibatch), "Loss:",avg_loss / len(minibatch), "Dur", str(time.time() - start) + "ms")
 
     def train_short_memory(self, state, action, reward, next_state, done):
         target = reward
