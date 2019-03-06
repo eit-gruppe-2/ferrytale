@@ -143,7 +143,7 @@ def run_game():
         pygame.display.flip()
 
         # Limit frames per second
-        clock.tick(60)
+        clock.tick(1000)
 
     agent.replay_new(agent.memory)
     agent.game_counter += 1
