@@ -185,6 +185,7 @@ class Environment:
         return possibleActions[index]
 
     def step(self, action):
+        dist_before = self.get_distance_between_agent_goal()
 
         self.state.agent.do_action(action)
         self.state.agent.step(self.speed)
@@ -194,7 +195,7 @@ class Environment:
 
         nextState = self.state
         done, colReward = self.is_done()
-        reward = self.get_reward() + colReward
+        reward = colReward + dist_before - self.get_distance_between_agent_goal()
         return nextState, reward, done
 
     def is_done(self):
