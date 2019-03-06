@@ -47,12 +47,12 @@ class DQNAgent(object):
     def network(self, weights=None):
         crossentropy = keras.losses.categorical_crossentropy
         model = Sequential()
-        model.add(Dense(input_dim=49, activation='relu', units=120))  # Current input_dim
+        model.add(Dense(120, input_dim=49, activation='relu'))  # Current input_dim
         model.add(Dropout(0.15))
         # model.add(Flatten())
-        model.add(Dense(units=120, activation='relu'))
+        model.add(Dense(120, activation='relu'))
         model.add(Dropout(0.15))
-        model.add(Dense(units=120, activation='relu'))
+        model.add(Dense(120, activation='relu'))
         model.add(Dropout(0.15))
         model.add(Dense(units=9, activation='softmax'))  # Current output_dim
         opt = Adam(self.learning_rate)
@@ -84,9 +84,13 @@ class DQNAgent(object):
                 target = reward + self.gamma * np.amax(self.model.predict(np.array([next_state]))[0])
             #print("Target reward", target, reward, self.model.predict(np.array([next_state])))
             target_f = self.model.predict(np.array([state]))
+            
             target_f[0][np.argmax(action)] = target
             start = time.time()
 
+            print("Target!", [state])
+            print("Prediction", self.model.predict(np.array([state])))
+            print("Target f", target_f)
             history = self.model.fit(np.array([state]), target_f, epochs=1, verbose=0)
 
             avg_acc += history.history["acc"][0]
