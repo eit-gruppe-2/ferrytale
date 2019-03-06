@@ -60,7 +60,7 @@ class DQNAgent(object):
         model.add(Dropout(0.15))
         model.add(Dense(units=120, activation='relu'))
         model.add(Dropout(0.15))
-        model.add(Dense(units=9, activation='linear'))  # Current output_dim
+        model.add(Dense(units=9, activation='softmax'))  # Current output_dim
         opt = Adam(self.learning_rate)
         model.compile(loss='mse', optimizer=opt)  # 'mse'
 
