@@ -124,12 +124,14 @@ class VisibleState:
     goal = None
     agent = None
     top_shore = None
+    bottom_shore = None
 
-    def __init__(self, boats, goal, agent, top_shore):
+    def __init__(self, boats, goal, agent, top_shore, bottom_shore):
         self.boats = boats
         self.goal = goal
         self.agent = agent
         self.top_shore = top_shore
+        self.bottom_shore = bottom_shore
 
 def rect_distance(rect1, rect2):
     x1, y1 = rect1.topleft
@@ -272,3 +274,5 @@ if __name__ == "__main__":
 
     env.step(Point(7, 7))
     print("After 2", env.state.agent.rect)
+
+

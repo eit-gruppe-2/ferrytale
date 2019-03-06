@@ -27,26 +27,27 @@ def generate_scenario(speed, dimensions, scenario):
 def get_defaults(dimensions):
     agent = Boat(Position(position_bottom_center(dimensions), Point(0, -1)), image=agent_image)
     goal = Dock(point_top_center(dimensions))
-    shore = Shore(Point(0, -dimensions[1] + 100))
-    shore.image = pygame.transform.scale(shore.image, (dimensions[0], dimensions[1]))
-
-    return agent, goal, shore
+    top_shore = Shore(Point(0, -dimensions[1] + 100))
+    top_shore.image = pygame.transform.scale(top_shore.image, (dimensions[0], dimensions[1]))
+    bot_shore = Shore(Point(0, dimensions[1] - 100))
+    bot_shore.image = pygame.transform.scale(top_shore.image, (dimensions[0], dimensions[1]))
+    return agent, goal, top_shore, bot_shore
 
 # Generates same environment as seen in meeting with milliampere
 def simple_scenario(dimensions):
-    agent, goal, shore = get_defaults(dimensions)
+    agent, goal, top_shore, bot_shore = get_defaults(dimensions)
 
     pirate = pygame.transform.flip(pirate_ship_image, True, False)
     collidable_boat = Boat(Position(point_right_center(dimensions), Point(-5, 0)), pirate)
     boats = [collidable_boat]
 
 
-    return Environment(VisibleState(boats, goal, agent, shore), dimensions)
+    return Environment(VisibleState(boats, goal, agent, top_shore, bot_shore), dimensions)
 
 
 def long_lasting(dimensions):
 
-    agent, goal, shore = get_defaults(dimensions)
+    agent, goal, top_shore, bot_shore = get_defaults(dimensions)
 
     boats = []
 
@@ -56,4 +57,4 @@ def long_lasting(dimensions):
         new_x = current_pos.point.x + 500
         current_pos = Position(Point(new_x, current_pos.point.y), current_pos.velocity)
     
-    return Environment(VisibleState(boats, goal, agent, shore), dimensions)
+    return Environment(VisibleState(boats, goal, agent, top_shore, bot_shore), dimensions)
