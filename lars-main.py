@@ -90,16 +90,12 @@ def run_game():
         if randint(0, 100) < agent.epsilon:
             final_move = to_categorical(randint(0, 8), num_classes=9)
             final_move = environment.index_to_action(np.nonzero(final_move)[0][0])
-            # print("RANDOM")
         else:
             # Predict action based on the current state
             prediction = agent.model.predict(state_old.reshape(1, 49))
-            print("state_old:", state_old)
-            # print("prediction[0]:", prediction[0])
+            print("Prediction:", prediction[0])
             final_move = to_categorical(np.argmax(prediction[0]), num_classes=9)
-            # print("final move:", final_move)
             final_move = environment.index_to_action(np.nonzero(final_move)[0][0])
-            # print("CHOSEN")
 
         # --- Event Processing
         for event in pygame.event.get():
@@ -145,7 +141,7 @@ def run_game():
         pygame.display.flip()
 
         # Limit frames per second
-        clock.tick(1000)
+        # clock.tick(60)
 
     agent.replay_new(agent.memory)
     agent.game_counter += 1
