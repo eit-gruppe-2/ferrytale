@@ -87,17 +87,19 @@ def run_game():
         state_old = agent.get_state(environment.state)
 
         # Perform a random action based on agent.epsilon, or choose the action
-        if randint(0, 100) < agent.epsilon:  #
+        if randint(0, 100) < agent.epsilon:
             final_move = to_categorical(randint(0, 8), num_classes=9)
             final_move = environment.index_to_action(np.nonzero(final_move)[0][0])
+            # print("RANDOM")
         else:
             # Predict action based on the current state
-            prediction = agent.model.predict(state_old.reshape(1, 21, 4))
-            print("Prediction:", prediction)
-            print("Prediction[0]", prediction[0])
-            print("Prediction[0]", prediction[0])
-            final_move = to_categorical(np.argmax(prediction[0][0]), num_classes=9)
+            prediction = agent.model.predict(state_old.reshape(1, 45))
+            print("state_old:", state_old)
+            # print("prediction[0]:", prediction[0])
+            final_move = to_categorical(np.argmax(prediction[0]), num_classes=9)
+            # print("final move:", final_move)
             final_move = environment.index_to_action(np.nonzero(final_move)[0][0])
+            # print("CHOSEN")
 
         # --- Event Processing
         for event in pygame.event.get():
@@ -143,7 +145,7 @@ def run_game():
         pygame.display.flip()
 
         # Limit frames per second
-        clock.tick(60)
+        clock.tick(1000)
 
     agent.replay_new(agent.memory)
     agent.game_counter += 1
@@ -156,7 +158,7 @@ def run_game():
 restart = True
 while restart:
     restart = run_game()
-    if agent.game_counter == 25:
+    if agent.game_counter == 80:
         restart = False
 
 agent.model.save_weights("weights.hdf5")
