@@ -6,6 +6,13 @@ import random
 import numpy as np
 import pandas as pd
 import time
+import tensorflow as tf
+#import keras
+
+config = tf.ConfigProto(device_count={'GPU': 0, 'CPU': 4})
+sess = tf.Session(config=config)
+keras.backend.set_session(sess)
+
 
 class DQNAgent(object):
     def __init__(self):
@@ -84,7 +91,7 @@ class DQNAgent(object):
                 target = reward + self.gamma * np.amax(self.model.predict(np.array([next_state]))[0])
             #print("Target reward", target, reward, self.model.predict(np.array([next_state])))
             target_f = self.model.predict(np.array([state]))
-            
+
             target_f[0][np.argmax(action)] = target
             start = time.time()
 
