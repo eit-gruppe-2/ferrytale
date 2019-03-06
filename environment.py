@@ -13,6 +13,16 @@ pirate_ship_image = pygame.image.load("./assets/PirateShip.png")
 kayak_image = pygame.image.load("./assets/kayak.png")
 grass_image = pygame.image.load("./assets/grass.png")
 
+
+class Rewards(Enum):
+    BOAT_CRASH = -100
+    WALL_CRASH = -100
+    GRASS_CRASH = -100
+    GOAL_HIT = 500
+    GOT_CLOSER = 100
+    ALMOST_THERE = 100
+    
+
 def distance_between_rect(rect1, rect2):
     x1, y1 = rect1.x + rect1.width / 2, rect1.y + rect1.height / 2
     x2, y2 = rect2.x + rect2.width / 2, rect2.y + rect2.height / 2
@@ -166,7 +176,7 @@ def rect_distance(rect1, rect2):
 class Environment:
     speed = 1
     dimensions = [0, 0]
-
+    given_rewards = []
     shore = None
 
     def __init__(self, visible_state, dimensions, speed=1):
@@ -194,11 +204,10 @@ class Environment:
             boat.step(self.speed)
 
         nextState = self.state
-        done, colReward = self.is_done()
-        reward = colReward + dist_before - self.get_distance_between_agent_goal()
+        reward, done = self.get_reward() 
         return nextState, reward, done
 
-    def is_done(self):
+    def collisions(self):
         # Done if agent has reached goal
         collidableSprites = pygame.sprite.Group()
         collidableSprites.add(self.state.top_shore)
@@ -207,29 +216,37 @@ class Environment:
         collidableSprites.add(self.state.boats)
         collisions = pygame.sprite.spritecollide(self.state.agent, collidableSprites, False)
         number_of_collisions = len(collisions)
-        col = 0
         col_reward=0
         for collision in collisions:
             if collision == self.state.goal:
-                col_reward = 10000
+                col_reward = Rewards.GOAL_HIT.value
             if collision in self.state.boats:
-                col += 1
-                col_reward -= 5000*col
-            if collision == self.state.top_shore:
-                col_reward -= 5000
-            if collision == self.state.bottom_shore:
-                col_reward -= 5000
+                col_reward += Rewards.BOAT_CRASH.value
+            if collision == self.state.top_shore or collision == self.state.bottom_shore:
+                col_reward += Rewards.GRASS_CRASH.value
             
         # Is inside window
         is_inside_window = True
         if not pygame.Rect(0,0,self.dimensions[0], self.dimensions[1]).contains(self.state.agent.rect):
             is_inside_window = False
+            col_reward += Rewards.WALL_CRASH.value
 
 
         return number_of_collisions > 0 or not is_inside_window, col_reward
 
     def get_reward(self):
-        return - self.get_distance_between_agent_goal()
+        done, reward = self.collisions()
+
+        if Rewards.GOT_CLOSER not in self.given_rewards and self.get_distance_between_agent_goal() < self.dimensions[0] / 2:
+            reward += Rewards.GOT_CLOSER.value
+            self.given_rewards.append(Rewards.GOT_CLOSER)
+        
+        if Rewards.ALMOST_THERE not in self.given_rewards and self.get_distance_between_agent_goal() < self.dimensions[0] / 4:
+            reward += Rewards.ALMOST_THERE.value
+            self.given_rewards.append(Rewards.ALMOST_THERE)
+
+
+        return reward, done
 
     def get_distance_between_agent_goal(self):
         return rect_distance(self.state.agent.rect, self.state.goal.rect)
