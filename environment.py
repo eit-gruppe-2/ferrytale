@@ -10,6 +10,7 @@ Point = namedtuple("Point", ["x", "y"])
 agent_image = pygame.image.load("./assets/boat_shop.png")
 dock_image = pygame.image.load("./assets/dock.png")
 pirate_ship_image = pygame.image.load("./assets/PirateShip.png")
+kayak_image = pygame.image.load("./assets/kayak.png")
 grass_image = pygame.image.load("./assets/grass.png")
 
 def distance_between_rect(rect1, rect2):
@@ -124,12 +125,14 @@ class VisibleState:
     goal = None
     agent = None
     top_shore = None
+    bottom_shore = None
 
-    def __init__(self, boats, goal, agent, top_shore):
+    def __init__(self, boats, goal, agent, top_shore, bottom_shore):
         self.boats = boats
         self.goal = goal
         self.agent = agent
         self.top_shore = top_shore
+        self.bottom_shore = bottom_shore
 
 def rect_distance(rect1, rect2):
     x1, y1 = rect1.topleft
@@ -198,6 +201,7 @@ class Environment:
         # Done if agent has reached goal
         collidableSprites = pygame.sprite.Group()
         collidableSprites.add(self.state.top_shore)
+        collidableSprites.add(self.state.bottom_shore)
         collidableSprites.add(self.state.goal)
         collidableSprites.add(self.state.boats)
         collisions = pygame.sprite.spritecollide(self.state.agent, collidableSprites, False)
@@ -212,7 +216,16 @@ class Environment:
                 col_reward -= 5000*col
             if collision == self.state.top_shore:
                 col_reward -= 5000
-        return number_of_collisions > 0, col_reward
+            if collision == self.state.bottom_shore:
+                col_reward -= 5000
+            
+        # Is inside window
+        is_inside_window = True
+        if not pygame.Rect(0,0,self.dimensions[0], self.dimensions[1]).contains(self.state.agent.rect):
+            is_inside_window = False
+
+
+        return number_of_collisions > 0 or not is_inside_window, col_reward
 
     def get_reward(self):
         return - self.get_distance_between_agent_goal()
@@ -272,3 +285,5 @@ if __name__ == "__main__":
 
     env.step(Point(7, 7))
     print("After 2", env.state.agent.rect)
+
+

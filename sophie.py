@@ -43,9 +43,10 @@ def run_game():
     screen = pygame.display.set_mode(size)
     pygame.display.set_caption("Ferrytale")
 
-    boat_list = pygame.sprite.OrderedUpdates()
-    all_sprites_list = pygame.sprite.Group()
+    boat_list = pygame.sprite.Group()
+    all_sprites_list = pygame.sprite.OrderedUpdates()
     all_sprites_list.add(environment.state.top_shore)
+    all_sprites_list.add(environment.state.bottom_shore)
     all_sprites_list.add(environment.state.goal)
     all_sprites_list.add(environment.state.agent)
     boat_list.add(environment.state.boats)
@@ -58,8 +59,6 @@ def run_game():
     # Used to manage how fast the screen updates
     clock = pygame.time.Clock()
 
-    # Hide the mouse cursor
-    pygame.mouse.set_visible(0)
 
 
     # -------- Main Program Loop -----------

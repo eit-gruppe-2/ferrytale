@@ -8,7 +8,7 @@ from keras.utils import to_categorical
 import environment as env
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scenarios import generate_scenario
+from scenarios import generate_scenario, ScenarioType
 
 # Define some colors
 BLACK = (0, 0, 0)
@@ -49,14 +49,14 @@ counter_plot = []
 
 
 def run_game():
-    display_width = 800
+    display_width = 700
     display_height = 600
 
     reward = 0
 
     env_speed = 1
     env_dim = [display_width, display_height]
-    environment = generate_scenario(env_speed, env_dim, 0)
+    environment = generate_scenario(env_speed, env_dim, ScenarioType.LONG_LASTING)
 
     size = [display_width, display_height]
     screen = pygame.display.set_mode(size)
@@ -65,12 +65,12 @@ def run_game():
     boat_list = pygame.sprite.OrderedUpdates()
     all_sprites_list = pygame.sprite.Group()
     all_sprites_list.add(environment.state.top_shore)
+    all_sprites_list.add(environment.state.bottom_shore)
     all_sprites_list.add(environment.state.goal)
     all_sprites_list.add(environment.state.agent)
+    
     boat_list.add(environment.state.boats)
     all_sprites_list.add(environment.state.boats)
-
-    NO_ACTION = env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.NONE)
 
     done = False
 
