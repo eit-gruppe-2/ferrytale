@@ -93,7 +93,7 @@ def run_game():
             # print("RANDOM")
         else:
             # Predict action based on the current state
-            prediction = agent.model.predict(state_old.reshape(1, 45))
+            prediction = agent.model.predict(state_old.reshape(1, 49))
             print("state_old:", state_old)
             # print("prediction[0]:", prediction[0])
             final_move = to_categorical(np.argmax(prediction[0]), num_classes=9)

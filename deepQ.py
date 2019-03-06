@@ -23,7 +23,7 @@ class DQNAgent(object):
         self.epsilon = 80 - self.game_counter
 
     def get_state(self, raw_state):
-        state = [0] * 45
+        state = [0] * 49
 
         # state[0 - 3]: [player pos x, pos y, vel x, vel y]
         state[0] = raw_state.agent.rect.x
@@ -35,7 +35,7 @@ class DQNAgent(object):
         state[4] = raw_state.goal.rect.x
         state[5] = raw_state.goal.rect.y
 
-        # state[6 - 44]: [boat pos x, pos y, vel x, vel y], for each boat
+        # state[6 - 49]: [boat pos x, pos y, vel x, vel y], for each boat
         for i in range(len(raw_state.boats)):
             state[6 + 4 * i] = raw_state.boats[i].rect.x
             state[7 + 4 * i] = raw_state.boats[i].rect.y
@@ -47,7 +47,7 @@ class DQNAgent(object):
     def network(self, weights=None):
         crossentropy = keras.losses.categorical_crossentropy
         model = Sequential()
-        model.add(Dense(input_dim=45, activation='relu', units=120))  # Current input_dim
+        model.add(Dense(input_dim=49, activation='relu', units=120))  # Current input_dim
         model.add(Dropout(0.15))
         # model.add(Flatten())
         model.add(Dense(units=120, activation='relu'))
@@ -82,7 +82,7 @@ class DQNAgent(object):
     def train_short_memory(self, state, action, reward, next_state, done):
         target = reward
         if not done:
-            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1, 45)))[0])
-        target_f = self.model.predict(state.reshape((1, 45)))
+            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1, 49)))[0])
+        target_f = self.model.predict(state.reshape((1, 49)))
         target_f[0][np.argmax(action)] = target
-        self.model.fit(state.reshape((1, 45)), target_f, epochs=1, verbose=0)
+        self.model.fit(state.reshape((1, 49)), target_f, epochs=1, verbose=0)
