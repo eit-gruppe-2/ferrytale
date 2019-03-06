@@ -8,7 +8,7 @@ from keras.utils import to_categorical
 import environment as env
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scenarios import generate_scenario, ScenarioType
+from scenarios import generate_scenario
 
 # Define some colors
 BLACK = (0, 0, 0)
@@ -49,14 +49,14 @@ counter_plot = []
 
 
 def run_game():
-    display_width = 700
+    display_width = 800
     display_height = 600
 
     reward = 0
 
     env_speed = 1
     env_dim = [display_width, display_height]
-    environment = generate_scenario(env_speed, env_dim, ScenarioType.LONG_LASTING)
+    environment = generate_scenario(env_speed, env_dim, 0)
 
     size = [display_width, display_height]
     screen = pygame.display.set_mode(size)
@@ -65,12 +65,14 @@ def run_game():
     boat_list = pygame.sprite.OrderedUpdates()
     all_sprites_list = pygame.sprite.Group()
     all_sprites_list.add(environment.state.top_shore)
-    all_sprites_list.add(environment.state.bottom_shore)
+    all_sprites_list.add(environment.state.leftBond)
+    all_sprites_list.add(environment.state.rightBond)
     all_sprites_list.add(environment.state.goal)
     all_sprites_list.add(environment.state.agent)
-    
     boat_list.add(environment.state.boats)
     all_sprites_list.add(environment.state.boats)
+
+    NO_ACTION = env.Action(env.VerticalAccelerationChoice.NONE, env.HorizontalAccelerationChoice.NONE)
 
     done = False
 
@@ -87,16 +89,17 @@ def run_game():
         state_old = agent.get_state(environment.state)
 
         # Perform a random action based on agent.epsilon, or choose the action
-        if randint(0, 100) < agent.epsilon:
+        if randint(0, 100) < agent.epsilon:  #
             final_move = to_categorical(randint(0, 8), num_classes=9)
-            final_move_environment = environment.index_to_action(np.nonzero(final_move)[0][0])
+            final_move = environment.index_to_action(np.nonzero(final_move)[0][0])
         else:
             # Predict action based on the current state
-            prediction = agent.model.predict(state_old.reshape(1, 49))
-            print("Prediction:", prediction[0])
-            final_move = to_categorical(np.argmax(prediction[0]), num_classes=9)
-            print("final_move", final_move)
-            final_move_environment = environment.index_to_action(np.nonzero(final_move)[0][0])
+            prediction = agent.model.predict(state_old.reshape(1, 21, 4))
+            print("Prediction:", prediction)
+            print("Prediction[0]", prediction[0])
+            print("Prediction[0]", prediction[0])
+            final_move = to_categorical(np.argmax(prediction[0][0]), num_classes=9)
+            final_move = environment.index_to_action(np.nonzero(final_move)[0][0])
 
         # --- Event Processing
         for event in pygame.event.get():
@@ -124,7 +127,7 @@ def run_game():
         all_sprites_list.draw(screen)
 
         # Perform new move and get new reward
-        next_state, reward, env_done = environment.step(final_move_environment)
+        next_state, reward, env_done = environment.step(final_move)
 
         # Get new state
         state_new = agent.get_state(next_state)
@@ -138,11 +141,11 @@ def run_game():
         if env_done or reward < -2000:
             done = True
 
-        text_to_screen(screen, "Reward {0}".format(round(reward)), display_width - 160, display_height - 50)
+        text_to_screen(screen, "Reward {0}".format(round(reward)), display_width - 200, display_height - 50)
         pygame.display.flip()
 
         # Limit frames per second
-        # clock.tick(60)
+        clock.tick(60)
 
     agent.replay_new(agent.memory)
     agent.game_counter += 1
@@ -155,11 +158,9 @@ def run_game():
 restart = True
 while restart:
     restart = run_game()
-    if agent.game_counter == 80:
+    if agent.game_counter == 25:
         restart = False
 
 agent.model.save_weights("weights.hdf5")
 plot_stats(counter_plot, score_plot)
-
-# Close the window and quit.
 pygame.quit()

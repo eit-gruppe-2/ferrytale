@@ -7,21 +7,12 @@ from itertools import product
 
 Point = namedtuple("Point", ["x", "y"])
 
-agent_image = pygame.image.load("./assets/boat_shop.png")
+#agent_image = pygame.image.load("./assets/boat_shop.png")
+agent_image = pygame.image.load("./assets/Boat.png")
 dock_image = pygame.image.load("./assets/dock.png")
 pirate_ship_image = pygame.image.load("./assets/PirateShip.png")
-kayak_image = pygame.image.load("./assets/kayak.png")
 grass_image = pygame.image.load("./assets/grass.png")
-
-
-class Rewards(Enum):
-    BOAT_CRASH = -100
-    WALL_CRASH = -100
-    GRASS_CRASH = -100
-    GOAL_HIT = 500
-    GOT_CLOSER = 100
-    ALMOST_THERE = 100
-    
+genericBoat_image = pygame.image.load("./assets/Boat.png")
 
 def distance_between_rect(rect1, rect2):
     x1, y1 = rect1.x + rect1.width / 2, rect1.y + rect1.height / 2
@@ -30,11 +21,18 @@ def distance_between_rect(rect1, rect2):
     dy = max(abs(y1 - y2) - rect2.height / 2, 0)
     return dx * dx + dy * dy
 
+class Bond(pygame.sprite.Sprite):
+    def __init__(self, point):
+        super().__init__()
+        self.image = genericBoat_image
+        self.rect = self.image.get_rect()
+        self.rect.x = point.x
+        self.rect.y = point.y
 
 class Dock(pygame.sprite.Sprite):
     def __init__(self, point):
         super().__init__()
-        self.image = dock_image 
+        self.image = dock_image
         self.rect = self.image.get_rect()
         self.rect.x = point.x
         self.rect.y = point.y
@@ -88,13 +86,9 @@ class Boat(pygame.sprite.Sprite):
         self.velocity = Point(x, y)
         #self.image = pygame.transform.rotate(self.image, math.degrees(math.atan2(action.vertical_acc.value, action.horizontal_acc.value) ))
 
-
-
     def step(self, time):
         self.rect.x = self.rect.x + time * self.velocity.x * 0.5
         self.rect.y = self.rect.y + time * self.velocity.y * 0.5
-
-
 
     def is_within_distance(self, distance, other_point):
         return False
@@ -106,15 +100,15 @@ class Boat(pygame.sprite.Sprite):
 
 
 class VerticalAccelerationChoice(Enum):
-    BACK = -1
+    BACK = -0.05
     NONE = 0
-    FORWARD = 1
+    FORWARD = 0.05
 
 
 class HorizontalAccelerationChoice(Enum):
-    LEFT = -1
+    LEFT = -0.1
     NONE = 0
-    RIGHT = 1
+    RIGHT = 0.1
 
 
 class Action:
@@ -135,14 +129,16 @@ class VisibleState:
     goal = None
     agent = None
     top_shore = None
-    bottom_shore = None
+    leftBond = None
+    rightBond = None
 
-    def __init__(self, boats, goal, agent, top_shore, bottom_shore):
+    def __init__(self, boats, goal, agent, top_shore, leftBond, rightBond):
         self.boats = boats
         self.goal = goal
         self.agent = agent
         self.top_shore = top_shore
-        self.bottom_shore = bottom_shore
+        self.leftBond = leftBond
+        self.rightBond = rightBond
 
 def rect_distance(rect1, rect2):
     x1, y1 = rect1.topleft
@@ -188,6 +184,7 @@ class Environment:
     # index_from_nn = 4
     # environment.step(environment.index_to_action(index_from_nn)))
 
+
     def index_to_action(self, index):
         l = len(possibleActions)
         if index >= l or index < 0:
@@ -195,7 +192,6 @@ class Environment:
         return possibleActions[index]
 
     def step(self, action):
-        dist_before = self.get_distance_between_agent_goal()
 
         self.state.agent.do_action(action)
         self.state.agent.step(self.speed)
@@ -204,49 +200,47 @@ class Environment:
             boat.step(self.speed)
 
         nextState = self.state
-        reward, done = self.get_reward() 
+        done, colReward = self.is_done()
+        reward = self.get_reward() + colReward
         return nextState, reward, done
 
-    def collisions(self):
+    def is_done(self):
         # Done if agent has reached goal
         collidableSprites = pygame.sprite.Group()
         collidableSprites.add(self.state.top_shore)
-        collidableSprites.add(self.state.bottom_shore)
         collidableSprites.add(self.state.goal)
         collidableSprites.add(self.state.boats)
         collisions = pygame.sprite.spritecollide(self.state.agent, collidableSprites, False)
         number_of_collisions = len(collisions)
+        col = 0
         col_reward=0
         for collision in collisions:
             if collision == self.state.goal:
-                col_reward = Rewards.GOAL_HIT.value
+                col_reward = 10000
             if collision in self.state.boats:
-                col_reward += Rewards.BOAT_CRASH.value
-            if collision == self.state.top_shore or collision == self.state.bottom_shore:
-                col_reward += Rewards.GRASS_CRASH.value
-            
-        # Is inside window
+                col += 1
+                col_reward -= 5000*col
+            if collision == self.state.top_shore:
+                col_reward -= 5000
+
+        """
         is_inside_window = True
+        print("inside")
         if not pygame.Rect(0,0,self.dimensions[0], self.dimensions[1]).contains(self.state.agent.rect):
+            print("outside")
             is_inside_window = False
-            col_reward += Rewards.WALL_CRASH.value
-
-
-        return number_of_collisions > 0 or not is_inside_window, col_reward
+            col_reward += 100
+        """
+        return number_of_collisions > 0, col_reward
 
     def get_reward(self):
-        done, reward = self.collisions()
-
-        if Rewards.GOT_CLOSER not in self.given_rewards and self.get_distance_between_agent_goal() < self.dimensions[0] / 2:
-            reward += Rewards.GOT_CLOSER.value
-            self.given_rewards.append(Rewards.GOT_CLOSER)
-        
-        if Rewards.ALMOST_THERE not in self.given_rewards and self.get_distance_between_agent_goal() < self.dimensions[0] / 4:
-            reward += Rewards.ALMOST_THERE.value
-            self.given_rewards.append(Rewards.ALMOST_THERE)
-
-
-        return reward, done
+        distToGoal = rect_distance(self.state.agent.rect, self.state.goal.rect)
+        distToOther = rect_distance(self.state.agent.rect, self.state.boats[0].rect)
+        distToRithBound = rect_distance(self.state.agent.rect, self.state.rightBond.rect)
+        distToRithLeft = rect_distance(self.state.agent.rect, self.state.leftBond.rect)
+        reward = -2.5*distToGoal + 0.5*distToOther #- 0.01*distToRithBound - 0.01*distToRithLeft
+        print(reward)
+        return reward
 
     def get_distance_between_agent_goal(self):
         return rect_distance(self.state.agent.rect, self.state.goal.rect)
@@ -258,18 +252,21 @@ class Environment:
 def position_bottom_center(dimensions):
     return Point(dimensions[0] / 2, dimensions[1])
 
-
 def point_top_center(dimensions):
     return Point(dimensions[0] / 2 - 50, -20)
-
 
 def point_right_center(dimensions):
     return Point(dimensions[0], dimensions[1] / 2)
 
+def point_right_top(dimensions):
+    return Point(dimensions[0] / 2 + 350, 0)
+
+def point_left_top(dimensions):
+    return Point(dimensions[0] / 2 - 450, 0)
 
 # Speed: Time between frames
 # Dimenstions: [width: number, height: number]
-"""def generate_scenario(speed, dimensions):
+def generate_scenario(speed, dimensions):
     # Generates same environment as seen in meeting with milliampere
     agent = Boat(Position(position_bottom_center(dimensions), Point(0, -1)), image=agent_image)
 
@@ -277,11 +274,11 @@ def point_right_center(dimensions):
     boats = [collidable_boat]
 
     goal = Dock(point_top_center(dimensions))
-    shore = Shore(point_top_center(dimensions))
+    Shore = Shore(point_top_center(dimensions))
+    rightBond = Bound(point_right_top(dimensions))
+    leftBond = Bound(point_left_top(dimensions))
 
-    return Environment(VisibleState(boats, goal, agent), , dimensions, speed)
-"""
-
+    return Environment(VisibleState(boats, goal, agent), dimensions, speed)
 
 
 def myformula(formula, **kwargs):
@@ -303,5 +300,3 @@ if __name__ == "__main__":
 
     env.step(Point(7, 7))
     print("After 2", env.state.agent.rect)
-
-

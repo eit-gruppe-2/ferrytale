@@ -1,16 +1,9 @@
 from keras.optimizers import Adam
 from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Flatten
-import keras
+from keras.layers.core import Dense, Dropout
 import random
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-#import keras
-
-config = tf.ConfigProto(device_count={'GPU': 0, 'CPU': 4})
-sess = tf.Session(config=config)
-keras.backend.set_session(sess)
 
 
 class DQNAgent(object):
@@ -29,43 +22,35 @@ class DQNAgent(object):
         self.epsilon = 80 - self.game_counter
 
     def get_state(self, raw_state):
-        state = [0] * 49
+        state = [[0] * 4] * 21
 
-        # state[0 - 3]: [player pos x, pos y, vel x, vel y]
-        state[0] = raw_state.agent.rect.x
-        state[1] = raw_state.agent.rect.y
-        state[2] = raw_state.agent.velocity.x
-        state[3] = raw_state.agent.velocity.y
+        # state[0]: [player pos x, pos y, vel x, vel y]
+        state[0] = [raw_state.agent.rect.x, raw_state.agent.rect.y,
+                    raw_state.agent.velocity.x, raw_state.agent.velocity.y]
 
-        # state[4 - 5]: [dock pos x, pos y, vel x=0, vel y=0]
-        state[4] = raw_state.goal.rect.x
-        state[5] = raw_state.goal.rect.y
+        # state[1]: [dock pos x, pos y, vel x=0, vel y=0]
+        state[1] = [raw_state.goal.rect.x, raw_state.goal.rect.y, 0, 0]
 
-        # state[6 - 49]: [boat pos x, pos y, vel x, vel y], for each boat
+        # state[2-16]: [boat pos x, pos y, vel x, vel y], for each boat
         for i in range(len(raw_state.boats)):
-            state[6 + 4 * i] = raw_state.boats[i].rect.x
-            state[7 + 4 * i] = raw_state.boats[i].rect.y
-            state[8 + 4 * i] = raw_state.boats[i].velocity.x
-            state[9 + 4 * i] = raw_state.boats[i].velocity.y
+            state[2 + i] = [raw_state.boats[i].rect.x, raw_state.boats[i].rect.y,
+                            raw_state.boats[i].velocity.x, raw_state.boats[i].velocity.y]
 
         return np.asarray(state)
 
     def network(self, weights=None):
-        crossentropy = keras.losses.categorical_crossentropy
         model = Sequential()
-        model.add(Dense(input_dim=49, activation='relu', units=120))  # Current input_dim
+        model.add(Dense(output_dim=120, activation='relu', input_shape=(21, 4)))  # Current input_dim
         model.add(Dropout(0.15))
-        # model.add(Flatten())
-        model.add(Dense(units=120, activation='relu'))
+        model.add(Dense(output_dim=120, activation='relu'))
         model.add(Dropout(0.15))
-        model.add(Dense(units=120, activation='relu'))
+        model.add(Dense(output_dim=120, activation='relu'))
         model.add(Dropout(0.15))
-        model.add(Dense(units=9, activation='softmax'))  # Current output_dim
+        model.add(Dense(output_dim=9, activation='softmax'))  # Current output_dim
         opt = Adam(self.learning_rate)
-        model.compile(loss='mse', optimizer=opt)  # 'mse'
+        model.compile(loss='mse', optimizer=opt)
 
         if weights:
-            print("HEEEEEEEEEEEEEEEYYYYYYYYYYYYYY")
             model.load_weights(weights)
         return model
 
@@ -88,7 +73,7 @@ class DQNAgent(object):
     def train_short_memory(self, state, action, reward, next_state, done):
         target = reward
         if not done:
-            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1, 49)))[0])
-        target_f = self.model.predict(state.reshape((1, 49)))
+            target = reward + self.gamma * np.amax(self.model.predict(next_state.reshape((1, 21, 4)))[0])
+        target_f = self.model.predict(state.reshape((1, 21, 4)))
         target_f[0][np.argmax(action)] = target
-        self.model.fit(state.reshape((1, 49)), target_f, epochs=1, verbose=0)
+        self.model.fit(state.reshape((1, 21, 4)), target_f, epochs=1, verbose=0)
