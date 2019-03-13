@@ -92,10 +92,9 @@ def run_game():
             final_move_environment = environment.index_to_action(np.nonzero(final_move)[0][0])
         else:
             # Predict action based on the current state
-            prediction = agent.model.predict(state_old.reshape(1, 49))
+            prediction = agent.model.predict(state_old.reshape(1, 46))
             print("Prediction:", prediction[0])
             final_move = to_categorical(np.argmax(prediction[0]), num_classes=9)
-            print("final_move", final_move)
             final_move_environment = environment.index_to_action(np.nonzero(final_move)[0][0])
 
         # --- Event Processing
