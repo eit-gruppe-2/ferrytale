@@ -86,6 +86,14 @@ class Boat(pygame.sprite.Sprite):
     def do_action(self, action):
         x = self.velocity.x + action.horizontal_acc.value
         y = self.velocity.y + action.vertical_acc.value
+        if x > 10:
+            x = 10
+        elif x < -10:
+            x = -10
+        if y > 10:
+            y = 10
+        elif y < -10:
+            y = -10
         self.velocity = Point(x, y)
         #self.image = pygame.transform.rotate(self.image, math.degrees(math.atan2(action.vertical_acc.value, action.horizontal_acc.value) ))
 
