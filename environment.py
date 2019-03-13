@@ -15,12 +15,13 @@ grass_image = pygame.image.load("./assets/grass.png")
 
 
 class Rewards(Enum):
-    BOAT_CRASH = -100
-    WALL_CRASH = -100
-    GRASS_CRASH = -100
-    GOAL_HIT = 500
-    GOT_CLOSER = 100
-    ALMOST_THERE = 100
+    BOAT_CRASH = -1
+    WALL_CRASH = -1
+    GRASS_CRASH = -1
+    GOAL_HIT = 10
+    GOT_CLOSER = 2
+    ALMOST_THERE = 3
+    LIVING = -0.1
     
 
 def distance_between_rect(rect1, rect2):
@@ -240,10 +241,13 @@ class Environment:
             reward += Rewards.GOT_CLOSER.value
             self.given_rewards.append(Rewards.GOT_CLOSER)
         
+
         if Rewards.ALMOST_THERE not in self.given_rewards and self.get_distance_between_agent_goal() < self.dimensions[0] / 4:
             reward += Rewards.ALMOST_THERE.value
             self.given_rewards.append(Rewards.ALMOST_THERE)
 
+        if not done:
+            reward += Rewards.LIVING.value
 
         return reward, done
 

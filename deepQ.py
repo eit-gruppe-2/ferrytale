@@ -7,12 +7,16 @@ import numpy as np
 import pandas as pd
 import time
 import tensorflow as tf
+from multiprocessing import cpu_count
 #import keras
 
-config = tf.ConfigProto(device_count={'GPU': 0, 'CPU': 4})
+config = tf.ConfigProto(device_count={'GPU': 0, 'CPU': cpu_count()})
 sess = tf.Session(config=config)
 keras.backend.set_session(sess)
 
+batch_size = 24
+memory_size = 1000
+num_of_actions = 9
 
 class DQNAgent(object):
     def __init__(self):
@@ -21,13 +25,14 @@ class DQNAgent(object):
         self.short_memory = np.array([])
         self.agent_target = 1
         self.agent_predict = 0
-        self.learning_rate = 0.0005
+        self.learning_rate = 0.01
         self.model = self.network()
         # self.model = self.network("weights.hdf5")  # Use precalculated weights
         self.actual = []
         self.memory = []
         self.game_counter = 0
         self.epsilon = 80 - self.game_counter
+        self.loss = 0
 
     def get_state(self, raw_state):
         state = [0] * 49
@@ -52,18 +57,17 @@ class DQNAgent(object):
         return np.asarray(state)
 
     def network(self, weights=None):
-        crossentropy = keras.losses.categorical_crossentropy
         model = Sequential()
         model.add(Dense(120, input_dim=49, activation='relu'))  # Current input_dim
         model.add(Dropout(0.15))
-        # model.add(Flatten())
+        #model.add(Flatten())
         model.add(Dense(120, activation='relu'))
         model.add(Dropout(0.15))
         model.add(Dense(120, activation='relu'))
         model.add(Dropout(0.15))
-        model.add(Dense(units=9, activation='softmax'))  # Current output_dim
+        model.add(Dense(9, activation='softmax'))  # Current output_dim
         opt = Adam(self.learning_rate)
-        model.compile(loss='mse', optimizer=opt, metrics=['accuracy'])  # 'mse'
+        model.compile(loss='mse', optimizer=opt)  # 'mse'
 
         if weights:
             print("HEEEEEEEEEEEEEEEYYYYYYYYYYYYYY")
@@ -74,36 +78,44 @@ class DQNAgent(object):
         self.memory.append((state, action, reward, next_state, done))
 
     def replay_new(self, memory):
-        if len(memory) > 1000:
-            minibatch = random.sample(memory, 1000)
+        loss = 0
+        if len(memory) > batch_size:
+            minibatch = random.sample(memory, batch_size)
         else:
             minibatch = memory
 
-        avg_acc = 0
-        avg_loss = 0
-        
+        inputs = np.zeros((batch_size, 49))
+        targets = np.zeros((inputs.shape[0], num_of_actions))						  
+        #32, 2
 
-        for state, action, reward, next_state, done in minibatch:
+        for i in range(len(minibatch)):
+            state = minibatch[i][0]
+            action = minibatch[i][1]
+            reward = minibatch[i][2]
+            next_state = minibatch[i][3]
+            done = minibatch[i][4]
             #print("action", action, "reward", reward, "next_state", next_state, "done", done)
             start = time.time()
             target = reward
             if not done:
                 target = reward + self.gamma * np.amax(self.model.predict(np.array([next_state]))[0])
-            #print("Target reward", target, reward, self.model.predict(np.array([next_state])))
-            target_f = self.model.predict(np.array([state]))
+            
+            inputs[i] = state
+            targets[i] = self.model.predict(np.array([state]))[0]
 
-            target_f[0][np.argmax(action)] = target
+            targets[i][np.argmax(action)] = target
+
             start = time.time()
+            #print("Target", target_f)
 
-            print("Target!", [state])
-            print("Prediction", self.model.predict(np.array([state])))
-            print("Target f", target_f)
-            history = self.model.fit(np.array([state]), target_f, epochs=1, verbose=0)
+            #print("Prediction", self.model.predict(np.array([state])))
+            #print("Target f", target_f)
 
-            avg_acc += history.history["acc"][0]
-            avg_loss += history.history["loss"][0]
+        #print("Accuracy:", avg_acc / len(minibatch), "Loss:",avg_loss / len(minibatch))
+        loss += self.model.train_on_batch(inputs, targets)
+        self.loss += loss
+        print("Timestep: %d, Loss: %.2f, Average loss: %.2f" % (self.game_counter, self.loss, self.loss / self.game_counter))
 
-        print("Accuracy:", avg_acc / len(minibatch), "Loss:",avg_loss / len(minibatch), "Dur", str(time.time() - start) + "ms")
 
     def train_short_memory(self, state, action, reward, next_state, done):
         target = reward

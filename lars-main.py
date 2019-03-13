@@ -54,6 +54,7 @@ def run_game(display_screen=True):
 
     reward = 0
 
+    reward_acc = 0
     env_speed = 10
     env_dim = [display_width, display_height]
     environment = generate_scenario(env_speed, env_dim, ScenarioType.LONG_LASTING)
@@ -100,7 +101,7 @@ def run_game(display_screen=True):
             prediction = agent.model.predict(state_old.reshape(1, 49))
             #print("Prediction:", prediction[0])
             final_move = to_categorical(np.argmax(prediction[0]), num_classes=9)
-            print("final_move", final_move)
+            #print("final_move", final_move)
             final_move_environment = environment.index_to_action(np.nonzero(final_move)[0][0])
 
         # --- Event Processing
@@ -137,12 +138,13 @@ def run_game(display_screen=True):
 
         # Perform new move and get new reward
         next_state, reward, env_done = environment.step(final_move_environment)
+        reward_acc += reward
 
         # Get new state
         state_new = agent.get_state(next_state)
 
         # Train short memory based on new action and state
-        agent.train_short_memory(state_old, final_move, reward, state_new, env_done)
+        #agent.train_short_memory(state_old, final_move, reward, state_new, env_done)
 
         # Store new data into long term memory
         agent.remember(state_old, final_move, reward, state_new, env_done)
@@ -155,8 +157,8 @@ def run_game(display_screen=True):
 
     agent.replay_new(agent.memory)
     agent.game_counter += 1
-    print("Game", agent.game_counter, "             Score:", reward)
-    score_plot.append(reward)
+    #print("Game", agent.game_counter, "             Score:", reward_acc)
+    score_plot.append(reward_acc)
     counter_plot.append(agent.game_counter)
     return True
 
@@ -165,8 +167,7 @@ restart = True
 while restart:
     start = time.time()
     restart = run_game(display_screen=False)
-    print("Game time:", time.time() - start, "ms")
-    if agent.game_counter == 80:
+    if agent.game_counter == 1000:
         restart = False
 
 agent.model.save_weights("weights.hdf5")
